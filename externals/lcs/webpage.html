@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <style>
+    .borderdiv {
+      display: inline-block;
+      margin: 0 auto;
+        border: 8px solid black;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+
+    #container {
+      width: 95%;
+      text-align: center;
+      margin: 30px auto;
+    }
+
+    #controls {
+      display: inline-block;
+      margin: 0 auto;
+      padding: 0px;
+    }
+
+    #str1, #str2 {
+      background: rgba(255,255,255,0);
+      padding-left: 3px;
+    }
+
+    .control-div {
+      display: flex;
+        align-items: center;
+      /*margin-bottom: 10px;*/
+      float: left;
+      margin-right: 8px;
+      border-radius: 8px;
+      height: 40px;
+      width: 40px;
+      background-color: #87AECF;
+    }
+
+    .control-div:hover {
+      background-color: #4480b3;
+    }
+
+    .control {
+      height: 25px;
+      width: 25px;
+      margin: 0 auto;
+    }
+
+    .unselectable {
+      user-select: none;
+      -moz-user-select: none;
+      -webkit-user-drag: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+    }
+
+    .wide_control {
+      width: 70px;
+    }
+
+    #input {
+      margin: 0 auto;
+      padding: 0px;
+    }
+
+    #content {
+      margin: 0 auto;
+      padding: 5px;
+    }
+
+    #footer {
+      margin: 0 auto;
+      padding: 5px;
+    }
+
+    #info, #algo_title, #algo_fill, #algo_find, #program_title {
+      font: 14pt JosefinSlab;
+      margin: auto;
+    }
+
+    #length {
+      width: 50%;
+      margin: auto;
+      float: left;
+      font: 12pt JosefinSlab;;
+    }
+
+    #sequence {
+      width: 50%;
+      float: right;
+      text-align: center;
+      font: 12pt JosefinSlab;
+    }
+
+    #length_header, #sequence_header {
+      font-weight: bold;
+    }
+
+    #algo_fill, #algo_find {
+      margin-left: 30px;
+      text-align: left;
+    }
+
+    #fill_block {
+      color: black;
+      font: 12pt Consolas;
+    }
+
+    #find_block {
+      color: black;
+      font: 12pt Consolas;
+    }
+
+    #algo_find {
+      margin-top: 20px;
+      margin-bottom: 20px;
+    }
+
+    #algo_fill_expand, #algo_find_expand {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.5s;
+    }
+
+
+    input[type="checkbox"] {
+      display: none;
+    }
+
+    input[type="checkbox"] + label:hover {
+      color: #555555;
+    }
+
+    input[type="checkbox"] + label:before {
+      content: "\25E5";
+      margin-right: 10px;
+    }
+
+    input[type="checkbox"]:checked + label:before {
+      content: "\25E2";
+      margin-right: 10px;
+    }
+
+    ul {
+        list-style-type: none;
+        color: black;
+    }
+
+    table {
+      margin-left: 30px;
+    }
+
+    body {
+      margin: 0 auto;
+    }
+
+    /* slider styling from http://danielstern.ca/range.css/?ref=css-tricks#/ */
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      margin: 4.8px 0;
+    }
+    input[type=range]:focus {
+      outline: none;
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 8.4px;
+      cursor: pointer;
+      box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+      background: #3071a9;
+      border-radius: 1.3px;
+      border: 0.2px solid #010101;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+      border: 1px solid #000000;
+      height: 18px;
+      width: 18px;
+      border-radius: 5px;
+      background: #ffffff;
+      cursor: pointer;
+      -webkit-appearance: none;
+      margin-top: -5px;
+    }
+    input[type=range]:focus::-webkit-slider-runnable-track {
+      background: #367ebd;
+    }
+    input[type=range]::-moz-range-track {
+      width: 100%;
+      height: 8.4px;
+      cursor: pointer;
+      box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+      background: #3071a9;
+      border-radius: 1.3px;
+      border: 0.2px solid #010101;
+    }
+    input[type=range]::-moz-range-thumb {
+      box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+      border: 1px solid #000000;
+      height: 18px;
+      width: 18px;
+      border-radius: 5px;
+      background: #ffffff;
+      cursor: pointer;
+    }
+    input[type=range]::-ms-track {
+      width: 100%;
+      height: 8.4px;
+      cursor: pointer;
+      background: transparent;
+      border-color: transparent;
+      color: transparent;
+    }
+    input[type=range]::-ms-fill-lower {
+      background: #2a6495;
+      border: 0.2px solid #010101;
+      border-radius: 2.6px;
+      box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+    }
+    input[type=range]::-ms-fill-upper {
+      background: #3071a9;
+      border: 0.2px solid #010101;
+      border-radius: 2.6px;
+      box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+    }
+    input[type=range]::-ms-thumb {
+      box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+      border: 1px solid #000000;
+      height: 18px;
+      width: 18px;
+      border-radius: 5px;
+      background: #ffffff;
+      cursor: pointer;
+      height: 8.4px;
+    }
+    input[type=range]:focus::-ms-fill-lower {
+      background: #3071a9;
+    }
+    input[type=range]:focus::-ms-fill-upper {
+      background: #367ebd;
+    }
+  </style>
+</head>
+
+<body>
+  <div id=container>
+    <div class="borderdiv">
+      <div id="program_expand">
+        <div id="controls">
+          <div title="run algorithm" class="control-div" onclick="commonSubsequence.runAlgorithm()"><img class="control unselectable" id="run" src="res/Play.png"></div>
+          <div title="pause algorithm" class="control-div" onclick="commonSubsequence.pauseAlgorithm()"><img class="control unselectable" id="pause" src="res/Pause.png"></div>
+          <div title="step backward" class="control-div" onclick="commonSubsequence.stepBackward()"><img class="control unselectable" id="back" src="res/StepBwd.png"></div>
+          <div title="step forward" class="control-div" onclick="commonSubsequence.stepForward()"><img class="control unselectable" id="step" src="res/StepFwd.png"></div>
+          <div title="go to beginning" class="control-div" onclick="commonSubsequence.newGrid()"><img class="control unselectable" id="start" src="res/Start.png"></div>
+          <div title="go to end" class="control-div" onclick="commonSubsequence.finishGrid()"><img class="control unselectable" id="end" src="res/Finish.png"></div>
+        </div>
+        <table id="input" class="unselectable">
+          <tr>
+            <td align="left">Run Speed: </td>
+            <td colspan = 2><input id="speed" type="range" min="0" max="10" step="1" oninput="commonSubsequence.updateSpeed(this.value)" onchange="commonSubsequence.updateSpeed(this.value)"/></td>
+          </tr>
+          <tr>
+            <td align="left">First String: </td>
+            <td><input id="str1" type="text" name="str1" onkeypress="commonSubsequence.restrictKeyPress(event)" oninput="commonSubsequence.newGrid(event)" onpaste="commonSubsequence.onPaste(this)" onblur="commonSubsequence.onBlur(this)"></td>
+            <!--<td><input class="wide_control" type="button" onclick="randomize('str1')" value="generate"></td>-->
+            <td rowspan="2"><input style="height:48px; white-space: normal;" class="wide_control" type="button" onclick="commonSubsequence.genExample()" value="load &#x00A; example"></td>
+          </tr>
+          <tr>
+            <td align="left">Second String: </td>
+            <td><input id="str2" type="text" name="str2" onkeypress="commonSubsequence.restrictKeyPress(event)" oninput="commonSubsequence.newGrid(event)" onpaste="commonSubsequence.onPaste(this)" onblur="commonSubsequence.onBlur(this)"></td>
+            <!--<td><input class="wide_control" type="button" onclick="randomize('str2')" value="generate"></td>-->
+          </tr>
+        </table>
+        <div id="content" class="unselectable">
+        </div>
+        <div id="info">
+          <div id="length"><p><b>SEQUENCE LENGTH</b></p><p id="length_header"></p></b></div>
+          <div id="sequence"><p><b>FOUND SEQUENCE</b></p><p id="sequence_header"></p></b></div>
+        </div>
+      </div>
+    </div>
+    <br>
+    <div class="borderdiv" id="algo">
+      <div id="algo_title">
+        <p><b>THE ALGORITHM</b></p>
+        </div>
+      <div id="algo_expand">
+        <div id="algo_fill">
+          <div>
+            <p><input id="algo_fill_toggle" type="checkbox" onclick="toggleExpand(this, 'algo_fill_expand')">
+              <label for="algo_fill_toggle" id="algo_fill_title"><b>[PSEUDOCODE] filling the matrix</b></label></p>
+            </div>
+            <div id="algo_fill_expand">
+<blockquote id="fill_block"><pre>
+for(i = 0; i &le; m; i++) {
+  m[i,0] = 0; 
+}
+for(j = 0; j &le; n; j++) {
+  m[0,j] = 0;
+} 
+
+for(i = 1; i &le; m; i++) {
+  for(j = 1; j &le; n; j++) {
+    if(x<sub>i</sub> == y<sub>j</sub>) {
+      m[i,j] = m[i-1,j-1] + 1
+    } 
+    else { 
+      m[i,j] = max(m[i-1,j],m[i,j-1]); 
+    }
+  }
+}</pre></blockquote>
+          </div>
+        </div>
+        <div id="algo_find">
+          <div>
+            <p><input id="algo_find_toggle" type="checkbox" onclick="toggleExpand(this, 'algo_find_expand')">
+              <label for="algo_find_toggle" id="algo_find_title"><b>[PSEUDOCODE] finding the sequence:</b></label></p>
+            </div>
+            <div id="algo_find_expand">
+<blockquote id="find_block"><pre>
+while(i != 0 && j != 0) {
+  if(x<sub>i</sub> == y<sub>j</sub>) {
+    sequence = x<sub>i</sub> + sequence;
+    i--;
+    j--;
+  } 
+  else if(m[i-1,j] &gt; m[i,j-1]) { 
+    i--;
+  } 
+  else {
+    j--;
+  }
+}
+
+print(sequence);  </pre></blockquote>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

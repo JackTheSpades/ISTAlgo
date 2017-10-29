@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <style>
+    .borderdiv {
+      display: inline-block;
+      margin: 0 auto;
+        border: 8px solid black;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+
+    #container {
+      width: 95%;
+      text-align: center;
+      margin: 30px auto;
+    }
+
+    #controls {
+      display: inline-block;
+      margin: 0 auto;
+      padding: 0px;
+    }
+
+    .control-div {
+      display: flex;
+        align-items: center;
+      /*margin-bottom: 10px;*/
+      float: left;
+      margin-right: 8px;
+      border-radius: 8px;
+      height: 40px;
+      width: 40px;
+      background-color: #87AECF;
+    }
+
+    .control-div:hover {
+      background-color: #4480b3;
+    }
+
+    .control {
+      height: 25px;
+      width: 25px;
+      margin: 0 auto;
+    }
+
+    .unselectable {
+      user-select: none;
+      -moz-user-select: none;
+      -webkit-user-drag: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+    }
+
+    .wide_control {
+      width: 70px;
+    }
+
+    #input {
+      margin: 0 auto;
+      padding: 0px;
+    }
+
+    #content {
+      margin: 0 auto;
+      padding: 5px;
+    }
+
+    #footer {
+      margin: 0 auto;
+      padding: 5px;
+    }
+
+    #info, #algo_title, #algo_fill, #algo_find, #program_title {
+      font: 14pt JosefinSlab;
+      margin: auto;
+    }
+
+    #current_sum {
+      width: 50%;
+      margin: auto;
+      float: left;
+      font: 12pt JosefinSlab;;
+    }
+
+    #largest_sum {
+      width: 50%;
+      float: right;
+      text-align: center;
+      font: 12pt JosefinSlab;
+    }
+
+    #current_sum_header, #largest_sum_header {
+      font-weight: bold;
+    }
+
+    #algo_fill, #algo_find {
+      margin-left: 30px;
+      text-align: left;
+    }
+
+    #fill_block {
+      color: black;
+      font: 12pt Consolas;
+    }
+
+    #find_block {
+      color: black;
+      font: 12pt Consolas;
+    }
+
+    #algo_find {
+      margin-top: 20px;
+      margin-bottom: 20px;
+    }
+
+    #algo_fill_expand, #algo_find_expand {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.5s;
+    }
+
+
+    input[type="checkbox"] {
+      display: none;
+    }
+
+    input[type="checkbox"] + label:hover {
+      color: #555555;
+    }
+
+    input[type="checkbox"] + label:before {
+      content: "\25E5";
+      margin-right: 10px;
+    }
+
+    input[type="checkbox"]:checked + label:before {
+      content: "\25E2";
+      margin-right: 10px;
+    }
+
+    ul {
+        list-style-type: none;
+        color: black;
+    }
+
+    table {
+      margin-left: 30px;
+    }
+
+    body {
+      margin: 0 auto;
+    }
+
+    /* slider styling from http://danielstern.ca/range.css/?ref=css-tricks#/ */
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      margin: 4.8px 0;
+    }
+    input[type=range]:focus {
+      outline: none;
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 8.4px;
+      cursor: pointer;
+      box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+      background: #3071a9;
+      border-radius: 1.3px;
+      border: 0.2px solid #010101;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+      border: 1px solid #000000;
+      height: 18px;
+      width: 18px;
+      border-radius: 5px;
+      background: #ffffff;
+      cursor: pointer;
+      -webkit-appearance: none;
+      margin-top: -5px;
+    }
+    input[type=range]:focus::-webkit-slider-runnable-track {
+      background: #367ebd;
+    }
+    input[type=range]::-moz-range-track {
+      width: 100%;
+      height: 8.4px;
+      cursor: pointer;
+      box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+      background: #3071a9;
+      border-radius: 1.3px;
+      border: 0.2px solid #010101;
+    }
+    input[type=range]::-moz-range-thumb {
+      box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+      border: 1px solid #000000;
+      height: 18px;
+      width: 18px;
+      border-radius: 5px;
+      background: #ffffff;
+      cursor: pointer;
+    }
+    input[type=range]::-ms-track {
+      width: 100%;
+      height: 8.4px;
+      cursor: pointer;
+      background: transparent;
+      border-color: transparent;
+      color: transparent;
+    }
+    input[type=range]::-ms-fill-lower {
+      background: #2a6495;
+      border: 0.2px solid #010101;
+      border-radius: 2.6px;
+      box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+    }
+    input[type=range]::-ms-fill-upper {
+      background: #3071a9;
+      border: 0.2px solid #010101;
+      border-radius: 2.6px;
+      box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+    }
+    input[type=range]::-ms-thumb {
+      box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+      border: 1px solid #000000;
+      height: 18px;
+      width: 18px;
+      border-radius: 5px;
+      background: #ffffff;
+      cursor: pointer;
+      height: 8.4px;
+    }
+    input[type=range]:focus::-ms-fill-lower {
+      background: #3071a9;
+    }
+    input[type=range]:focus::-ms-fill-upper {
+      background: #367ebd;
+    }
+  </style>
+</head>
+
+<body>
+  <div id=container>
+    <div class="borderdiv">
+      <div id="program_expand">
+        <div id="controls">
+          <div title="run algorithm" class="control-div" onclick="scanline.runAlgorithm()"><img class="control unselectable" id="run" src="res/Play.png" alt="Run"></div>
+          <div title="pause algorithm" class="control-div" onclick="scanline.pauseAlgorithm()"><img class="control unselectable" id="pause" src="res/Pause.png" alt="Pause"></div>
+          <div title="step backward" class="control-div" onclick="scanline.stepBackward()"><img class="control unselectable" id="back" src="res/StepBwd.png" alt="Backward"></div>
+          <div title="step forward" class="control-div" onclick="scanline.stepForward()"><img class="control unselectable" id="step" src="res/StepFwd.png" alt="Forward"></div>
+          <div title="go to beginning" class="control-div" onclick="scanline.newGrid()"><img class="control unselectable" id="start" src="res/Start.png" alt="Beginning"></div>
+          <div title="go to end" class="control-div" onclick="scanline.finishGrid()"><img class="control unselectable" id="end" src="res/Finish.png" alt="End"></div>
+        </div>
+        <table id="input" class="unselectable">
+          <tr>
+            <td align="right">Run Speed: </td>
+            <td colspan = 2><input id="speed" type="range" min="0" max="10" step="1" oninput="scanline.updateSpeed(this.value)" onchange="scanline.updateSpeed(this.value)"/></td>
+          </tr>
+          <tr>
+            <td align="right">A[k] = </td>
+            <td>
+              <input id="avals" type="text" name="A-Values" 
+                onkeypress="scanline.restrictKeyPress(event)"
+                onblur="scanline.onBlur(this)">
+            </td>
+            <td><input style="white-space: normal;" class="wide_control" type="button" onclick="scanline.genExample()" value="Random"></td>
+          </tr>
+        </table>
+        <div id="content" class="unselectable">
+        </div>
+        <div id="info">
+          <div id="current_sum"><p><b>CURRENT SUM</b></p><p id="current_sum_header"></p></div>
+          <div id="largest_sum"><p><b>LARGEST SUM</b></p><p id="largest_sum_header"></p></div>
+        </div>
+      </div>
+    </div>
+    <br>
+    <div class="borderdiv" id="algo">
+      <div id="algo_title">
+        <p><b>THE ALGORITHM</b></p>
+        </div>
+      <div id="algo_expand">
+        <div id="algo_find">
+          <div>
+            <p><input id="algo_find_toggle" type="checkbox" onclick="toggleExpand(this, 'algo_find_expand')">
+              <label for="algo_find_toggle" id="algo_find_title"><b>[PSEUDOCODE] find largest sum</b></label></p>
+            </div>
+            <div id="algo_find_expand">
+<blockquote id="fill_block"><pre>
+max = 0; von = 0; bis = 0; //end-result
+  T = 0;   v = 1;   k = 1; //current-result
+for (k = 1; k < n; k++) {
+    T += A[k]
+    if (T <= 0) {
+        T = 0;
+        v = k + 1
+    }
+    else if (T > max) {
+        max = T;
+        bis = k;
+        von = v;
+    }
+}</pre></blockquote>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

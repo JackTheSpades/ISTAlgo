@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <style>
+    .borderdiv {
+      display: inline-block;
+      margin: 0 auto;
+        border: 8px solid black;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+
+    #container {
+      width: 95%;
+      text-align: center;
+      margin: 30px auto;
+    }
+
+    #controls {
+      display: inline-block;
+      margin: 0 auto;
+      padding: 0px;
+    }
+
+    .control-div {
+      display: flex;
+      align-items: center;
+      /*margin-bottom: 10px;*/
+      float: left;
+      margin-right: 8px;
+      border-radius: 8px;
+      height: 40px;
+      width: 40px;
+      background-color: #87AECF;
+    }
+
+    .control-div:hover {
+      background-color: #4480b3;
+    }
+
+    .control {
+      height: 25px;
+      width: 25px;
+      margin: 0 auto;
+    }
+
+    .unselectable {
+      user-select: none;
+      -moz-user-select: none;
+      -webkit-user-drag: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+    }
+
+    .wide_control {
+      width: 70px;
+    }
+
+    #input {
+      margin: 0 auto;
+      padding: 0px;
+    }
+
+    #content {
+      margin: 0 auto;
+      padding: 5px;
+    }
+
+    #footer {
+      margin: 0 auto;
+      padding: 5px;
+    }
+
+    #info, #algo_title, #algo_insert, #algo_find {
+      font: 14pt JosefinSlab;
+      margin: auto;
+    }
+
+    #length {
+      width: 50%;
+      margin: auto;
+      float: left;
+      font: 12pt JosefinSlab;
+    }
+
+    #sequence {
+      width: 50%;
+      float: right;
+      text-align: center;
+      font: 12pt JosefinSlab;
+    }
+
+    #length_header, #sequence_header {
+      font-weight: bold;
+    }
+
+    #algo_insert, #algo_find {
+      margin-left: 30px;
+      text-align: left;
+    }
+
+    #insert_block {
+      color: black;
+      font: 12pt Consolas;
+    }
+
+    #find_block {
+      color: black;
+      font: 12pt Consolas;
+    }
+
+    #algo_find {
+      margin-top: 20px;
+      margin-bottom: 20px;
+    }
+
+    #also_insert_expand, #algo_find_expand {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.5s;
+    }
+
+
+    input[type="checkbox"] {
+      display: none;
+    }
+
+    input[type="checkbox"] + label:hover {
+      color: #555555;
+    }
+
+    input[type="checkbox"] + label:before {
+      content: "\25E5";
+      margin-right: 10px;
+    }
+
+    input[type="checkbox"]:checked + label:before {
+      content: "\25E2";
+      margin-right: 10px;
+    }
+
+    ul {
+        list-style-type: none;
+        color: black;
+    }
+
+    table {
+      width: 352px;
+      margin-left: 30px;
+    }
+
+    body {
+      margin: 0 auto;
+    }
+
+    /* slider styling from http://danielstern.ca/range.css/?ref=css-tricks#/ */
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      margin: 4.8px 0;
+    }
+    input[type=range]:focus {
+      outline: none;
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 8.4px;
+      cursor: pointer;
+      box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+      background: #3071a9;
+      border-radius: 1.3px;
+      border: 0.2px solid #010101;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+      border: 1px solid #000000;
+      height: 18px;
+      width: 18px;
+      border-radius: 5px;
+      background: #ffffff;
+      cursor: pointer;
+      -webkit-appearance: none;
+      margin-top: -5px;
+    }
+    input[type=range]:focus::-webkit-slider-runnable-track {
+      background: #367ebd;
+    }
+    input[type=range]::-moz-range-track {
+      width: 100%;
+      height: 8.4px;
+      cursor: pointer;
+      box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+      background: #3071a9;
+      border-radius: 1.3px;
+      border: 0.2px solid #010101;
+    }
+    input[type=range]::-moz-range-thumb {
+      box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+      border: 1px solid #000000;
+      height: 18px;
+      width: 18px;
+      border-radius: 5px;
+      background: #ffffff;
+      cursor: pointer;
+    }
+    input[type=range]::-ms-track {
+      width: 100%;
+      height: 8.4px
+;      cursor: pointer;
+      background: transparent;
+      border-color: transparent;
+      color: transparent;
+    }
+    input[type=range]::-ms-fill-lower {
+      background: #2a6495;
+      border: 0.2px solid #010101;
+      border-radius: 2.6px;
+      box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+    }
+    input[type=range]::-ms-fill-upper {
+      background: #3071a9;
+      border: 0.2px solid #010101;
+      border-radius: 2.6px;
+      box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+    }
+    input[type=range]::-ms-thumb {
+      box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+      border: 1px solid #000000;
+      height: 18px;
+      width: 18px;
+      border-radius: 5px;
+      background: #ffffff;
+      cursor: pointer;
+      height: 8.4px;
+    }
+    input[type=range]:focus::-ms-fill-lower {
+      background: #3071a9;
+    }
+    input[type=range]:focus::-ms-fill-upper {
+      background: #367ebd;
+    }
+
+  </style>
+</head>
+
+<body>
+  <div id=container>
+    <div class="borderdiv">
+      <div id="program_expand">
+        <div id="controls">
+          <div title="run algorithm" class="control-div" onclick="iterativeHull.runAlgorithm()"><img class="control unselectable" id="run" src="res/Play.png"></div>
+          <div title="pause algorithm" class="control-div" onclick="iterativeHull.pauseAlgorithm()"><img class="control unselectable" id="pause" src="res/Pause.png"></div>
+          <div title="step backward" class="control-div" onclick="iterativeHull.stepBackward()"><img class="control unselectable" id="back" src="res/StepBwd.png"></div>
+          <div title="step forward" class="control-div" onclick="iterativeHull.stepForward()"><img class="control unselectable" id="step" src="res/StepFwd.png"></div>
+          <div title="randomize insertion order" class="control-div" onclick="iterativeHull.randomizeOrder()"><img class="control unselectable" id="random" src="res/Random.png"></div>
+          <div title="go to beginning" class="control-div" onclick="iterativeHull.resetHull()"><img class="control unselectable" id="start" src="res/Start.png"></div>
+          <div title="go to end" class="control-div" onclick="iterativeHull.finishHull()"><img class="control unselectable" id="end" src="res/Finish.png"></div>
+          <div title="clear points" class="control-div" onclick="iterativeHull.clearHull()"><img class="control unselectable" id="clear" src="res/Clear.png"></div>
+        </div>
+        <table id="input" class="unselectable">
+          <tr>
+            <td align="left" width="95">Run Speed: </td>
+            <td colspan = 2><input width = "247" id="speed" type="range" min="0" max="10" step="1" oninput="iterativeHull.updateSpeed(this.value)" onchange="iterativeHull.updateSpeed(this.value)"/></td>
+          </tr>
+        </table>
+        <div id="content" class="unselectable"> 
+        </div>
+        <div id="info">
+          
+        </div>
+      </div>
+    </div>
+    <br>
+    <div class="borderdiv" id="algo">
+      <div id="algo_title">
+        <p><b>THE ALGORITHM</b></p>
+        </div>
+      <div id="algo_expand">
+        <div id="algo_insert">
+          <div>
+            <p><input id="also_insert_toggle" type="checkbox" onclick="toggleExpand(this, 'also_insert_expand')">
+              <label for="also_insert_toggle" id="also_insert_title"><b>[PSEUDOCODE] Iteratively Inserting:</b></label></p>
+            </div>
+            <div id="also_insert_expand">
+<blockquote id="insert_block"><pre>
+H = [P[1], P[2], P[3]]        //Hull vertices
+E = [P12, P23, P31]           //Hull edges
+S = (P[1] + P[2] + P[3])/3    //Point inside hull 
+W = []                        //witnesses map
+
+U = [P\H]         //all points except for the first three
+R = []            //remaining points
+F = []            //flagged points
+
+while (U.length != 0 AND F.length + H.length != P.length) {
+  for(point U[i] in U) {
+    oracle = EDGE(S, U[i])
+    
+    // INTERSECTING_HULL_SEGMENT(x) returns the hull segment
+    // that has an intersection with x or null if there is none
+
+    witness = INTERSECTING_HULL_SEGMENT(oracle)
+    if(witness != null) {
+      if(W.get(witness) == null)
+        W.add(witness, []) // empty witnessed points array
+
+      // declare witness situation
+      U[i].witness = witness
+      W.get(witness).push(U[i])
+
+      R.push(U[i])
+    } else {
+      F.push(U[i])
+    }
+
+    U.remove(U[i])
+  }
+
+  if(R.length == 0)
+    return
+
+  X = R[RANDOM_INDEX_FROM_ARRAY(R)]
+  H.push(X)
+  R.remove(X)
+
+  // find points that define tangents 
+  // of the hull to X
+  
+  // a vertex v in a hull has two edges connected 
+  // to it. v is a tangent point if S and X are on 
+  // the same side of one edge, but on different 
+  // sides of the other edge
+
+  T1, T2 = TANGENT_POINTS_TO(X);
+
+  // PATH_FROM_TO_CONTAINING(p1, p2, w) returns
+  // all edges on one of two possible paths connecting
+  // p1 and p2 in E, namely the path that contains w
+
+  edges = PATH_FROM_TO_CONTAINING(T1, T2, X.witness)
+
+  for(i = 0; i < edges; i++) {
+    // points u, v define edge
+    (u, v) = edges[i] 
+    if(u != T1 && u != T2) {
+      U.push(u)
+      H.remove(u)
+    }
+
+    if(v != T1 && v != T2) {
+      U.push(v)
+      H.remove(v)
+    }
+
+    E.remove(edges[i])
+  }
+
+  E.push(EDGE(T1, X))
+  E.push(EDGE(T2, X))
+
+  for(i = 0; i < W.get(X.witness).length; i++) {
+    // remove from witnessed array and push into U
+    U.push(W.get(X.witness).pop())  
+    W.remove(X.witness)
+  }
+}
+</pre></blockquote>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

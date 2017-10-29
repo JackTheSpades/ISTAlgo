@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Animated Algorithms</title>
+  <meta name="author" content="Martin Borzan">
+  <meta name="description" content="A collection of animated algorithms">
+  
+  <script src="lib/jquery-3.1.1.min.js"></script>
+  <script type="text/javascript" src="externals/lcs/script.js"></script>
+  <script type="text/javascript" src="externals/chgs/script.js"></script>
+  <script type="text/javascript" src="externals/chii/script.js"></script>
+  <script type="text/javascript" src="externals/mst/script.js"></script>
+  <script type="text/javascript" src="externals/lsi/script.js"></script>
+  <script type="text/javascript" src="externals/sln/script.js"></script>
+
+  <style type="text/css"> 
+    body {
+      margin: 0;
+      padding: 0;
+     }
+
+    div.container {
+      width: 100%;
+      height: auto;
+      margin: 0 auto;
+  }
+
+  #external_page {
+    background: #C5CFD6;
+    position: relative;
+      overflow: hidden;
+      min-height: 700px;
+      height: 100%;
+      width: 100%;
+      width: auto;
+  }
+
+  /* dropdown from https://www.w3schools.com/howto/howto_js_dropdown.asp */
+  /* Dropdown Button */
+  .dropbtn {
+      background-color: #58A3E3;
+      color: black;
+      padding: 16px;
+      font-size: 32px;
+      text-transform: uppercase;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;      
+      display: block;
+      width: 100%;
+  }
+
+  /* Dropdown button on hover & focus */
+  .dropbtn:hover, .dropbtn:focus {
+      background-color: #4480b3;
+  }
+
+  /* The container <div> - needed to position the dropdown content */
+  .dropdown {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+  }
+
+  /* Dropdown Content (Hidden by Default) */
+  .dropdown-content {
+      display: none;
+      position: absolute;
+      background-color: #87AECF;
+      min-width: 160px;
+      box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+      z-index: 1;
+      width: 100%;
+  }
+
+  /* buttons inside the dropdown */
+  .dropdown-content button {
+      color: black;
+      padding: 12px 16px;
+      text-decoration: none;
+      background-color: #87AECF;
+      color: black;
+      font-size: 24px;
+      text-transform: uppercase;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;      
+      display: block;
+      width: 100%;
+  }
+
+  /* Change color of dropdown links on hover */
+  .dropdown-content button:hover {background-color: #58A3E3}
+
+  /* Show the dropdown menu (use JS to add this class to the .dropdown-content container when the user clicks on the dropdown button) */
+  .show {display:block;}
+
+  button > img{
+    vertical-align: middle;
+    align: right;
+  }
+  </style>
+
+  <script type="text/javascript">
+    var algorithms = [];
+    var activeAlgoIndex = 0;
+    var algorithm;
+
+    function load() {
+      algorithms.push({algo: 0, url: 'externals/chgs/webpage.html', text: 'Convex Hull Graham Scan'})
+      algorithms.push({algo: 1, url: 'externals/chii/webpage.html', text: 'Convex Hull Iterative Insert'})
+      algorithms.push({algo: 2, url: 'externals/lsi/webpage.html', text: 'Line Segment Intersections'})
+      algorithms.push({algo: 3, url: 'externals/lcs/webpage.html', text: 'Longest Common Subsequence'})
+      algorithms.push({algo: 4, url: 'externals/mst/webpage.html', text: 'Minimal Spanning Tree'})
+      algorithms.push({algo: 5, url: 'externals/sln/webpage.html', text: 'Scanline'})
+
+
+      loadExternalHTML(activeAlgoIndex)
+    }
+    function loadAlgorithm(algoNum) {
+      switch(algoNum) {
+          case 0:
+              return grahamHull;
+          case 1:
+              return iterativeHull;
+          case 2:
+              return lineIntersections;
+          case 3:
+              return commonSubsequence;
+          case 4:
+              return spanningTree;
+          case 5:
+              return scanline;
+          default:
+              return null
+      }
+    }
+
+    function loadPage(html_target, algoNum) {
+      $("#external_page").load(html_target, 
+      function (responseText, textStatus, XMLHttpRequest) {
+        if (textStatus == "success") {
+            $("#external_page").html(responseText)
+            algorithm = undefined;
+            algorithm = loadAlgorithm(algoNum);
+            algorithm.active = true
+            algorithm.initialize()
+        }
+        if (textStatus == "error") {
+            alert("AN ERROR OCCURED WHILE LOADING THE ALGORITHM")
+        }
+      });
+    }
+
+    function loadExternalHTML(algoInfoIndex) {
+      var algoInfo = algorithms[algoInfoIndex]
+      var oldButton = document.getElementById(+activeAlgoIndex);
+      oldButton.style["display"] = "block";
+
+      activeAlgoIndex = algoInfoIndex
+
+      var headerButton = document.getElementById("headerButton");
+      headerButton.innerHTML = algoInfo.text;
+
+      if(algoInfo.url !== null) loadPage(algoInfo.url, algoInfo.algo);
+    }
+
+    function toggleExpand(checkbox, divname) {
+      if(checkbox.checked) {
+        document.getElementById(divname).style.maxHeight = "2000px";
+      } else {
+        document.getElementById(divname).style.maxHeight = "0px";
+      }
+    }
+    
+    //dropdown from https://www.w3schools.com/howto/howto_js_dropdown.asp
+    function showDropDown() {
+      var algodiv = document.getElementById("dropdownContentDiv");
+      //uncomment to hide current algorithm button
+      //var currentButton = document.getElementById(+activeAlgoIndex);
+      //currentButton.style["display"] = "none";
+
+      algodiv.classList.toggle("show");
+    }
+
+    // Close the dropdown menu if the user clicks outside of it
+    window.onclick = function(event) {
+      if (!$(event.target).hasClass('dropbtn') && !$(event.target).hasClass('droparrow')) {
+
+        var dropdowns = document.getElementsByClassName("dropdown-content");
+        var i;
+        for (i = 0; i < dropdowns.length; i++) {
+          var openDropdown = dropdowns[i];
+          if (openDropdown.classList.contains('show')) {
+            openDropdown.classList.remove('show');
+          }
+        }
+      }
+    }
+  </script>
+
+  </head>
+  <body onload="load()">
+  <div class="container">
+    <div class="dropdown">
+      <button id="headerButton" onclick="showDropDown()" class="dropbtn"></button>
+      <img src="res/DownArrow.png" onclick="showDropDown()" class="droparrow" height="35px" width="35px" align="right" style="margin: -50px 20px 0 0">
+      <div id="dropdownContentDiv" class="dropdown-content">
+        <button id="0" onclick="loadExternalHTML(0)">Convex Hull Graham Scan</button>
+        <button id="1" onclick="loadExternalHTML(1)">Convex Hull Iterative Insert</button>
+        <button id="2" onclick="loadExternalHTML(2)">Line Segment Intersections</button>
+        <button id="3" onclick="loadExternalHTML(3)">Longest Common Subsequence</button>
+        <button id="4" onclick="loadExternalHTML(4)">Mininal Spanning Tree</button>
+        <button id="5" onclick="loadExternalHTML(5)">Scanline</button>
+      </div>
+    </div>
+    <div id="external_page">
+    </div>
+  </div>
+  </body>
+</html>

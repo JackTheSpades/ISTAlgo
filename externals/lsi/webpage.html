@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+	<meta charset="UTF-8">
+	<style>
+		.borderdiv {
+			display: inline-block;
+			margin: 0 auto;
+		    border: 8px solid black;
+		    padding: 10px;
+		    margin-bottom: 10px;
+		}
+
+		#container {
+			width: 95%;
+			text-align: center;
+			margin: 30px auto;
+		}
+
+		#controls {
+			display: inline-block;
+			margin: 0 auto;
+			padding: 0px;
+		}
+
+		.control-div {
+			display: flex;
+    		align-items: center;
+			/*margin-bottom: 10px;*/
+			float: left;
+			margin-right: 8px;
+			border-radius: 8px;
+			height: 40px;
+			width: 40px;
+			background-color: #87AECF;
+		}
+
+		.control-div:hover {
+			background-color: #4480b3;
+		}
+
+		.control {
+      height: 25px;
+      width: 25px;
+      margin: 0 auto;
+    }
+
+    .unselectable {
+      user-select: none;
+      -moz-user-select: none;
+      -webkit-user-drag: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+    }
+
+		.wide_control {
+			width: 70px;
+		}
+
+		#input {
+			margin: 0 auto;
+			padding: 0px;
+		}
+
+		#content {
+			margin: 0 auto;
+			padding: 5px;
+		}
+
+		#footer {
+			margin: 0 auto;
+			padding: 5px;
+		}
+
+		#info, #algo_title, #algo_prim, #algo_intersections {
+			font: 14pt JosefinSlab;
+			margin: auto;
+		}
+
+		#length {
+			width: 50%;
+			margin: auto;
+			float: left;
+			font: 12pt JosefinSlab;
+		}
+
+		#sequence {
+			width: 50%;
+			float: right;
+			text-align: center;
+			font: 12pt JosefinSlab;
+		}
+
+		#length_header, #sequence_header {
+			font-weight: bold;
+		}
+
+		#algo_prim, #algo_intersections {
+			margin-left: 30px;
+			text-align: left;
+		}
+
+		#prim_block {
+			color: black;
+			font: 12pt Consolas;
+		}
+
+		#intersection_block {
+			color: black;
+			font: 12pt Consolas;
+		}
+
+		#algo_intersections {
+			margin-top: 20px;
+			margin-bottom: 20px;
+		}
+
+		#algo_prim_expand, #algo_intersections_expand {
+			max-height: 0;
+			overflow: hidden;
+			transition: max-height 0.5s;
+		}
+
+
+		input[type="checkbox"] {
+			display: none;
+		}
+
+		input[type="checkbox"] + label:hover {
+			color: #555555;
+		}
+
+		input[type="checkbox"] + label:before {
+			content: "\25E5";
+			margin-right: 10px;
+		}
+
+		input[type="checkbox"]:checked + label:before {
+			content: "\25E2";
+			margin-right: 10px;
+		}
+
+		ul {
+		  	list-style-type: none;
+		  	color: black;
+		}
+
+		table {
+			width: 352px;
+			margin-left: 30px;
+		}
+
+		body {
+			margin: 0 auto;
+		}
+
+		/* slider styling from http://danielstern.ca/range.css/?ref=css-tricks#/ */
+		input[type=range] {
+		  -webkit-appearance: none;
+		  width: 100%;
+		  margin: 4.8px 0;
+		}
+		input[type=range]:focus {
+		  outline: none;
+		}
+		input[type=range]::-webkit-slider-runnable-track {
+		  width: 100%;
+		  height: 8.4px;
+		  cursor: pointer;
+		  box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+		  background: #3071a9;
+		  border-radius: 1.3px;
+		  border: 0.2px solid #010101;
+		}
+		input[type=range]::-webkit-slider-thumb {
+		  box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+		  border: 1px solid #000000;
+		  height: 18px;
+		  width: 18px;
+		  border-radius: 5px;
+		  background: #ffffff;
+		  cursor: pointer;
+		  -webkit-appearance: none;
+		  margin-top: -5px;
+		}
+		input[type=range]:focus::-webkit-slider-runnable-track {
+		  background: #367ebd;
+		}
+		input[type=range]::-moz-range-track {
+		  width: 100%;
+		  height: 8.4px;
+		  cursor: pointer;
+		  box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+		  background: #3071a9;
+		  border-radius: 1.3px;
+		  border: 0.2px solid #010101;
+		}
+		input[type=range]::-moz-range-thumb {
+		  box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+		  border: 1px solid #000000;
+		  height: 18px;
+		  width: 18px;
+		  border-radius: 5px;
+		  background: #ffffff;
+		  cursor: pointer;
+		}
+		input[type=range]::-ms-track {
+		  width: 100%;
+		  height: 8.4px;
+		  cursor: pointer;
+		  background: transparent;
+		  border-color: transparent;
+		  color: transparent;
+		}
+		input[type=range]::-ms-fill-lower {
+		  background: #2a6495;
+		  border: 0.2px solid #010101;
+		  border-radius: 2.6px;
+		  box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+		}
+		input[type=range]::-ms-fill-upper {
+		  background: #3071a9;
+		  border: 0.2px solid #010101;
+		  border-radius: 2.6px;
+		  box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+		}
+		input[type=range]::-ms-thumb {
+		  box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+		  border: 1px solid #000000;
+		  height: 18px;
+		  width: 18px;
+		  border-radius: 5px;
+		  background: #ffffff;
+		  cursor: pointer;
+		  height: 8.4px;
+		}
+		input[type=range]:focus::-ms-fill-lower {
+		  background: #3071a9;
+		}
+		input[type=range]:focus::-ms-fill-upper {
+		  background: #367ebd;
+		}
+
+	</style>
+</head>
+
+<body>
+	<div id=container>
+		<div class="borderdiv">
+			<div id="program_expand">
+				<div id="controls">
+					<div title="run algorithm" class="control-div" onclick="lineIntersections.runAlgorithm()"><img class="control unselectable" id="run" src="res/Play.png"></div>
+					<div title="pause algorithm" class="control-div" onclick="lineIntersections.pauseAlgorithm()"><img class="control unselectable" id="pause" src="res/Pause.png"></div>
+					<div title="step forward" class="control-div" onclick="lineIntersections.stepBackward()"><img class="control unselectable" id="back" src="res/StepBwd.png"></div>
+					<div title="step backward" class="control-div" onclick="lineIntersections.stepForward()"><img class="control unselectable" id="step" src="res/StepFwd.png"></div>
+					<div title="go to beginning" class="control-div" onclick="lineIntersections.resetSweep()"><img class="control unselectable" id="start" src="res/Start.png"></div>
+					<div title="go to end" class="control-div" onclick="lineIntersections.finishSweep()"><img class="control unselectable" id="end" src="res/Finish.png"></div>
+					<div title="clear lines" class="control-div" onclick="lineIntersections.clearLines()"><img class="control unselectable" id="clear" src="res/Clear.png"></div>
+				</div>
+				<table id="input" class="unselectable">
+					<tr>
+						<td align="left" width="95">Run Speed: </td>
+						<td colspan = 2><input width = "247" id="speed" type="range" min="0" max="10" step="1" oninput="lineIntersections.updateSpeed(this.value)" onchange="lineIntersections.updateSpeed(this.value)"/></td>
+					</tr>
+				</table>
+				<div id="content" class="unselectable"> 
+				</div>
+				<div id="info">
+					
+				</div>
+			</div>
+		</div>
+		<br>
+		<div class="borderdiv" id="algo">
+			<div id="algo_title">
+				<p><b>THE ALGORITHM</b></p>
+  			</div>
+			<div id="algo_expand">
+				<div id="algo_intersections">
+					<div>
+						<p><input id="algo_intersections_toggle" type="checkbox" onclick="toggleExpand(this, 'algo_intersections_expand')">
+		  				<label for="algo_intersections_toggle" id="algo_intersections_title"><b>[PSEUDOCODE] Scanline - Line Intersections:</b></label></p>
+		  			</div>
+		  			<div id="algo_intersections_expand">
+<blockquote id="intersection_block"><pre>
+X = [P]       //all start/end points of the segments
+Y = []        //collection of lines
+prevN = []    //previously known neighbours in Y (Set)
+newN = []     //newly found neighbours in Y
+segments = [] //found segments
+
+(Sort X by x coordinates in ascending order and keep the 
+sorted order throughout the algorithm when inserting and 
+removing elements. Sort Y by the y coordinates of the 
+intersection point of the lines in Y with the scanline 
+and keep the sorted order throughout the algorithm.)
+
+while(X.length != 0) {
+  m = X[0]  //point with minimal x coordinate
+  X.delete(m)
+
+  if(m.type == "starting point") {
+    //insert m's segment into Y 
+    INSERT_SEGMENT(m.segment, Y)  
+  }
+  if(m.type == "intersection point") {
+    //switch the segments that intersect at m
+    SWITCH_SEGMENTS(m.segment[0], m.segment[1], Y)
+  }
+  if(m.type == "ending point") {
+    //remove m's segment from Y
+    REMOVE_SEGMENT(m.segment, Y)
+  }
+
+  //find all new (not previously known) neighbours in Y
+  newN = FIND_NEW_NEIGHBOURS()
+
+  for(i = 0; i < newN.length; i++) {
+    //neighbour-pairs have two segment elements
+    p = INTERSECTION(newN[i][0], newN[i][1]
+    if(p != null && p.x > m.x)´{
+      p.segment=[newN[i][0], newN[i][1]]
+      INSERT_POINT(p, X)
+      segments.push(p)
+    }
+  }
+
+  prevN.addAll(newN)
+  newN = []
+}
+</pre></blockquote>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
