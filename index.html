@@ -14,6 +14,9 @@
   <script type="text/javascript" src="externals/mst/script.js"></script>
   <script type="text/javascript" src="externals/lsi/script.js"></script>
   <script type="text/javascript" src="externals/sln/script.js"></script>
+  <script type="text/javascript" src="externals/ls/script.js"></script>
+  <script type="text/javascript" src="externals/rst/script.js"></script>
+  
 
   <style type="text/css"> 
     body {
@@ -115,6 +118,8 @@
       algorithms.push({algo: 3, url: 'externals/lcs/webpage.html', text: 'Longest Common Subsequence'})
       algorithms.push({algo: 4, url: 'externals/mst/webpage.html', text: 'Minimal Spanning Tree'})
       algorithms.push({algo: 5, url: 'externals/sln/webpage.html', text: 'Scanline'})
+      algorithms.push({algo: 6, url: 'externals/ls/webpage.html', text: 'Largest Sum'})
+      algorithms.push({algo: 7, url: 'externals/rst/webpage.html', text: 'Random Search Tree'})
 
 
       loadExternalHTML(activeAlgoIndex)
@@ -133,6 +138,10 @@
               return spanningTree;
           case 5:
               return scanline;
+          case 6:
+              return largestSum;
+           case 7:
+              return randomSearchTree;
           default:
               return null
       }
@@ -214,6 +223,8 @@
         <button id="3" onclick="loadExternalHTML(3)">Longest Common Subsequence</button>
         <button id="4" onclick="loadExternalHTML(4)">Mininal Spanning Tree</button>
         <button id="5" onclick="loadExternalHTML(5)">Scanline</button>
+        <button id="6" onclick="loadExternalHTML(6)">Largest Sum</button>
+        <button id="7" onclick="loadExternalHTML(7)">Ramdom Search Tree</button>
       </div>
     </div>
     <div id="external_page">

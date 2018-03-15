@@ -8,11 +8,14 @@ function Scanline() {
   const cell_size = 40;
   const grid_border = 10;
   const exec_interval = 50;  //ms
+  const diagram_height = 400;
   
   var canvas;
   var context;
   
   var speed = 5;
+  var diagram_ratio = 0;
+  var expected_sum = 0;
 
   var direction_indicator_thickness = "3";
   var direction_indicator_color = "#636363"
@@ -75,15 +78,15 @@ function Scanline() {
   this.restrictKeyPress = function (event) {
 
     var keycode = event.keyCode;
+    var charCode = event.charCode;
 
     //information source: https://www.cambiaresearch.com/articles/15/javascript-char-codes-key-codes
 
     var valid =
-      (keycode >= 8 && keycode <= 46) ||   //control keys
-      (keycode >= 48 && keycode <= 57) ||  //numbers
-      (keycode >= 96 && keycode <= 105) || //numbers on number pad
-      keycode == 188 ||                    // ,
-      keycode == 173;                      // -
+      (keycode >= 8 && keycode <= 46) ||     //control keys
+      (charCode >= 48 && charCode <= 57) ||  //numbers
+      charCode == 44 ||                     // ,
+      charCode == 45;                       // -
 
     if(!valid)
       event.preventDefault();
@@ -131,6 +134,7 @@ function Scanline() {
     FINISHED = false;
     ISPAUSED = true;
     ALL_QUEUE = [];
+    this.updateWrittenSum();
   }
 
   this.genExample = function () {
@@ -155,19 +159,38 @@ function Scanline() {
     grid_k.length = 0;    // actually grid_k always has the same values, only length changes, but recalculating doesn't take long
                           // and for organization sake, I keep it here.
 
+    //for all entries...
     for(i = 0; i < A.length; i++) {
       grid_k[i] = this.CellValue(
-        x_off + (i * cell_size),
-        y_off,
-        i + 1);
+        x_off + (i * cell_size),    //x offset = left-offset of the grid + (current index * cell size)
+        y_off,                      //y offset = const top-offset of the grid.
+        i + 1);                     //value    = index + 1;
       grid_Ak[i] = this.CellValue(
-        x_off + (i * cell_size),
-        y_off + cell_size,
-        A[i]);
+        x_off + (i * cell_size),    //x offset = same as above
+        y_off + cell_size,          //y offset = const top-offset of the grid + cell size (that is to say, one grid row lower)
+        A[i]);                      //value    = current value in A.
     }
 
     canvas.width = grid_border * 2 + A.length * cell_size + header_diff;
-    canvas.height = cell_size * 3;
+    canvas.height = cell_size * 3 + diagram_height + cell_size; //cell_size as padding between grid and diagram, thus trice + cell_size padding bottom
+
+    //a bit ironic but use scanline-algorithm to get the max-sum so we can calculate the ratio
+    //for the diagram.
+    var max = 0, t = 0;
+    for (k = 0; k <= A.length; k++) {
+      t += A[k];
+      if (t <= 0)
+        t = 0;
+      else if (t > max)
+        max = t;
+    }
+
+    //because max=0 causes serious issues.
+    if (max == 0)
+      max++;
+
+    expected_sum = max;
+    diagram_ratio = diagram_height / max;
   }
 
   this.drawCellsAll = function () {
@@ -184,6 +207,7 @@ function Scanline() {
   // draws an array of cells with a name in the header column.
   this.drawCells = function (cells, name) {
 
+    //delete grid-row across entire width of canvas for the cells.
     context.clearRect(0, cells[0].y, canvas.width, cell_size);
 
     context.font = "bold " + font_size + "px Consolas"
@@ -211,8 +235,66 @@ function Scanline() {
       context.fillText(cell.v, cell.x + (cell_size / 2) - width, cell.y + (cell_size / 2) + font_size / 4.0);
     }
     
+    //write name before the grid row.
     var strlen = context.measureText(name).width + grid_border;
     context.fillText(name, cells[0].x - strlen, cells[0].y + (cell_size / 2) + font_size / 4.0)
+  }
+
+  this.drawDiagram = function () {
+
+    context.clearRect(0, cell_size * 2.5, canvas.width, diagram_height + cell_size);
+
+    var step = Math.ceil(expected_sum / 10);    // units per step
+
+    var x_from = grid_k[0].x;
+    var x_to = grid_k[grid_k.length - 1].x + cell_size;
+
+
+    context.font = font_size + "px Consolas"
+    context.globalCompositeOperation = "source-over";
+
+    for (var s = 0; s <= expected_sum; s += step) {
+
+      var y = (cell_size * 3) + (diagram_height - (diagram_ratio * s));
+
+      context.beginPath();
+      context.strokeStyle = "black";
+      context.lineWidth = 0.5;
+      context.moveTo(x_from, y);
+      context.lineTo(x_to, y);
+      context.stroke();
+
+      //write name before the grid row.
+      var strlen = context.measureText(s).width + grid_border;
+      context.fillText(s, x_from - strlen, y + font_size / 4.0)
+    }
+
+    //draw points and connection lines.
+    var x_prev = -1, y_prev = -1;
+    for (var i = 1; i <= K; i++) {
+
+      var t = T
+      if (i != K)
+        t = ALL_QUEUE[i].t;
+      var y = (cell_size * 3) + (diagram_height - (diagram_ratio * t));
+      var x = grid_k[i - 1].x + (cell_size / 2);
+
+      context.beginPath();
+      context.arc(x, y, 5, 0, 2 * Math.PI);
+      context.fillStyle = "#D700FF";
+      context.fill();
+
+      if (x_prev != -1) {
+        context.beginPath();
+        context.strokeStyle = "#D700FF";
+        context.lineWidth = 2;
+        context.moveTo(x_prev, y_prev);
+        context.lineTo(x, y);
+        context.stroke();
+      }
+      x_prev = x;
+      y_prev = y;
+    }
   }
 
   // returns a cell object with 4 variables:
@@ -256,17 +338,29 @@ function Scanline() {
     if (FINISHED)
       return;
     
-    this.updateCells();
+    ALL_QUEUE[K - 1] = {
+      v: V,
+      //k: K,
+      t: T,
+      von: VON,
+      bis: BIS,
+      max: MAX,
+    };
 
     T += A[K - 1];
     if (T <= 0) {
       V = K + 1;
       T = 0;
     }
-    else if (T > MAX)
-      this.updateLargest();
-    this.updateCurrent();
-    
+    else if (T > MAX) {
+      MAX = T;
+      VON = V;
+      BIS = K;
+    }
+
+    this.updateCells();
+    this.updateWrittenSum();
+
     K++;
     FINISHED = K > A.length;
   }
@@ -276,16 +370,18 @@ function Scanline() {
     if (K == 1)
       return;
     K--;
-    var past = ALL_QUEUE[K - 1];
-    V = past.v;
-    T = past.t;
-    //VON = past.von;
-    //BIS = past.bis;
-    //MAX = past.max;
+
+    var past = ALL_QUEUE[K - 1];  // K-1 da K bei 1 startet.
 
     this.updateCells();
-    this.updateCurrent();
-    this.updateLargest();
+    this.updateWrittenSum();
+
+    V = past.v;
+    T = past.t;
+    VON = past.von;
+    BIS = past.bis;
+    MAX = past.max;
+
   }
 
   this.stepFill = function () {
@@ -293,7 +389,9 @@ function Scanline() {
       this.stepForward();
   }
 
-  this.stepBackFill = function() {
+  this.stepBackFill = function () {
+    while (K != 1)
+      this.stepBackward();
   }
 
 
@@ -305,33 +403,31 @@ function Scanline() {
   }
 
 
-  this.updateCurrent = function () {
+  this.updateWrittenSum = function () {
     var this_v = V;
+    var this_k = K;
     if (this_v > K)
       this_v--;
-    document.getElementById("current_sum_header").innerHTML =
-      "Sum  = " + T + "<br>" +
-      "From = " + this_v + "<br>" +
-      "To   = " + K;
 
-    ALL_QUEUE[K - 1] = {
-      v: this_v,
-      //k: K,
-      t: T,
-      von: VON,
-      bis: BIS,
-      max: MAX,
-    };
-  }
+    if (this_k == 0) {
+      document.getElementById("current_sum_header").innerHTML = "None yet"
+    }
+    else {
+      document.getElementById("current_sum_header").innerHTML =
+        "Sum  = " + T + "<br>" +
+        "From = " + this_v + "<br>" +
+        "To   = " + this_k;
+    }
 
-  this.updateLargest = function () {
-    MAX = T;
-    VON = V;
-    BIS = K;
-    document.getElementById("largest_sum_header").innerHTML =
-      "Sum  = " + MAX + "<br>" +
-      "From = " + VON + "<br>" +
-      "To   = " + BIS;
+    if (MAX == 0) {
+      document.getElementById("largest_sum_header").innerHTML = "Empty Sum";
+    }
+    else {
+      document.getElementById("largest_sum_header").innerHTML =
+        "Sum  = " + MAX + "<br>" +
+        "From = " + VON + "<br>" +
+        "To   = " + BIS;
+    }
   }
 
   this.updateCells = function () {
@@ -339,9 +435,11 @@ function Scanline() {
     for (i = 0; i < grid_k.length; i++)
       grid_k[i].c = "transparent";
 
-    grid_k[K - 1].c = "lavender";
-    grid_k[V - 1].c = "lightcoral";
+    grid_k[K - 1].c = "lime";
+    if(V <= grid_k.length)
+      grid_k[V - 1].c = "lightcoral";
     this.drawCellsK();
+    this.drawDiagram();
   }
 };
 
