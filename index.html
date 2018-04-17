@@ -16,6 +16,7 @@
   <script type="text/javascript" src="externals/sln/script.js"></script>
   <script type="text/javascript" src="externals/ls/script.js"></script>
   <script type="text/javascript" src="externals/rst/script.js"></script>
+  <script type="text/javascript" src="externals/mwt/script.js"></script>
   
 
   <style type="text/css"> 
@@ -118,8 +119,9 @@
       algorithms.push({algo: 3, url: 'externals/lcs/webpage.html', text: 'Longest Common Subsequence'})
       algorithms.push({algo: 4, url: 'externals/mst/webpage.html', text: 'Minimal Spanning Tree'})
       algorithms.push({algo: 5, url: 'externals/sln/webpage.html', text: 'Scanline'})
-      algorithms.push({algo: 6, url: 'externals/ls/webpage.html', text: 'Largest Sum'})
+      algorithms.push({algo: 6, url: 'externals/ls/webpage.html', text: 'Maximum Subarray'})
       algorithms.push({algo: 7, url: 'externals/rst/webpage.html', text: 'Random Search Tree'})
+      algorithms.push({algo: 8, url: 'externals/mwt/webpage.html', text: 'Minimum Weight Triangulation'})
 
 
       loadExternalHTML(activeAlgoIndex)
@@ -142,6 +144,8 @@
               return largestSum;
            case 7:
               return randomSearchTree;
+           case 8:
+              return minimumweighttriangulation;
           default:
               return null
       }
@@ -225,6 +229,7 @@
         <button id="5" onclick="loadExternalHTML(5)">Scanline</button>
         <button id="6" onclick="loadExternalHTML(6)">Largest Sum</button>
         <button id="7" onclick="loadExternalHTML(7)">Ramdom Search Tree</button>
+        <button id="8" onclick="loadExternalHTML(8)">Minimum Weight Triangulation</button>
       </div>
     </div>
     <div id="external_page">

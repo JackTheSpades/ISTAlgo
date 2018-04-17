@@ -174,6 +174,10 @@ function GrahamHull() {
       }
     }
   }
+  
+  this.write = function(lines) {
+  
+  }
 
   this.stepForward = function() {
     if(FINISHED) return;
