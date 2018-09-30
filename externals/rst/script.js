@@ -3,7 +3,8 @@ function RandomSearchTree() {
 
   //consts.
   const font_size = 24;
-  const bit_count = 6;      
+  const bit_count = 6;
+  const max_bit_count = 6;  //
   const max_count = 16;     // maximum allowed size for the input array.
   const header_diff = 150;  // distance of the 'seperator' from the right side
                             // between the tree-area and the grid-area.
@@ -12,21 +13,22 @@ function RandomSearchTree() {
   const exec_interval = 50;  //ms
 
   const radius = 20;
+  const grid_thickness = 3;
+  const grid_color = "#222222";
   
   var canvas;
   var context;
   
   var speed = 5;
     
-  const grid_thickness = 3;
-  const grid_color = "#222222";
   
 
   //global algorithm variables
-  var X = [];       //variables to be stored in tree
-  var PX = [];      //priority of variables
-  var Tree = null;  //the tree itself
-  var I = 0;        //counter for X / PX
+  var X = [];               //variables to be stored in tree
+  var PX = [];              //priority of variables
+  var P_VisibleQueue = [];
+  var Tree = null;          //the tree itself
+  var I = 0;                //counter for X / PX
 
   var STEP = 0;
 
@@ -165,10 +167,10 @@ function RandomSearchTree() {
   }
     
   this.onBlur = function(textbox) {
-    this.validateAndUpdate(textbox)
+    this.validateAndUpdate(textbox);
+    this.clear();
     this.calculateCells();
     this.drawCells();
-    this.clear();
   }
 
   this.clear = function () {
@@ -179,7 +181,6 @@ function RandomSearchTree() {
     add = true;
     last_node = null;
     STEP = 0;
-    QUEUE = [];
   }
 
   this.genExample = function () {
@@ -200,16 +201,20 @@ function RandomSearchTree() {
     }
 
     var textbox = document.getElementById("avals").value = X.toString();
+    this.clear();
     this.calculateCells();
     this.drawCells();
-    this.clear();
   }
 
   this.calculateCells = function () {
 
     PX = [];
-    for (var i = 0; i < X.length; i++)
-      PX[i] = Array(bit_count + 1).join("_")
+    P_VisibleQueue = [];
+    P_VisibleQueue[0] = new Array(X.length).fill(0);
+    for (var i = 0; i < X.length; i++) {
+      PX[i] = [];
+    }
+
 
     canvas.height = grid_border * 2 + cell_size * (X.length + 1);
     canvas.width = 800;
@@ -249,6 +254,7 @@ function RandomSearchTree() {
     context.fillText("p(x)", x_off + (cell_size + (px_cell_width / 2)) - (str_width / 2), y_off + (cell_size / 2) + font_size / 4.0);
 
     y_off += cell_size;
+    var P_VisibleCur = P_VisibleQueue[STEP];
 
     //draw actual content for x and p(x)
     for (var i = 0; i < X.length; i++) {
@@ -263,15 +269,20 @@ function RandomSearchTree() {
       context.fillStyle = grid_color;
       context.fillText(X[i], x_off + (cell_size / 2) - (str_width / 2), y_off + (cell_size / 2) + font_size / 4.0);
 
+      var px_text = new Array(max_bit_count).fill("_");
+      for (var j = 0; j < P_VisibleCur[i] && j < max_bit_count; j++)
+        px_text[j] = PX[i][j];
+      var litteral = px_text.join('');
+
       //draw box for content of [p(X[i])]
       context.beginPath();
       context.strokeStyle = grid_color;
       context.lineWidth = grid_thickness;
       context.rect(x_off + cell_size, y_off, px_cell_width, cell_size);
       context.stroke();
-      str_width = context.measureText(PX[i]).width;
+      str_width = context.measureText(litteral).width;
       context.fillStyle = grid_color;
-      context.fillText(PX[i], x_off + (cell_size + (px_cell_width / 2)) - (str_width / 2), y_off + (cell_size / 2) + font_size / 4.0);
+      context.fillText(litteral, x_off + (cell_size + (px_cell_width / 2)) - (str_width / 2), y_off + (cell_size / 2) + font_size / 4.0);
 
       y_off += cell_size;
     }
@@ -452,13 +463,18 @@ function RandomSearchTree() {
       return true;
     
     //bits are from right to left, as oppose to the expected left to righ
-    for (var i = 0; i < bit_count; i++) {
+    //we loop until we get two different bits.
+    for (var i = 0; true; i++) {
       
       //set bits of priority if they haven't been calculated yet.
-      if(PX[node.i][i] == '_')
-        PX[node.i] = PX[node.i].replaceAt(i, Math.round(Math.random()).toString());       // if priority on bit-index is '_', set it to random '1' or '0'
-      if (PX[node.p.i][i] == '_')
-        PX[node.p.i] = PX[node.p.i].replaceAt(i, Math.round(Math.random()).toString());   // same for parent node.
+      if (PX[node.i].length == i) {
+        PX[node.i].push(Math.round(Math.random()).toString());     // if priority on bit-index is '_', set it to random '1' or '0'
+        P_VisibleQueue[STEP][node.i]++;
+      }
+      if (PX[node.p.i].length == i) {
+        PX[node.p.i].push(Math.round(Math.random()).toString());   // same for parent node.
+        P_VisibleQueue[STEP][node.p.i]++;
+      }
 
       //compare: if prio(parent) is bigger than prio(node), return true, otherwise false
       //         if equal, continue.
@@ -468,16 +484,8 @@ function RandomSearchTree() {
         return false;
       
     }
-    
-    //getting here means both have the exact same priority.
-    return true;
-
   }
   
-  String.prototype.replaceAt = function (index, replacement) {
-    return this.substr(0, index) + replacement + this.substr(index + replacement.length);
-  }
-
   //method for periodic execution
   // if ISPAUSED is not set it will call stepForward()
   this.runInterval = function () {
@@ -485,6 +493,8 @@ function RandomSearchTree() {
       if (!ISPAUSED) {
         randomSearchTree.stepForward();
       }
+      if (FINISHED)
+        ISPAUSED = true;
     }
   }
   //js function for periodic execution of given function...
@@ -578,6 +588,10 @@ function RandomSearchTree() {
         Tree = last_node;
     }
 
+    STEP++;
+    if (P_VisibleQueue.length == STEP)
+      P_VisibleQueue[STEP] = P_VisibleQueue[STEP - 1].slice();
+
     // after adding or moving the node up by one,
     // we check the tree to see if it is now in proper priority order.
     // ... it not, we need to keep on 'sorting' (indicated by add==false).
@@ -592,14 +606,20 @@ function RandomSearchTree() {
     
     // if add is true (indicating that tree is sorted)
     // and the Index counter is the same as the array length, we are done.
-    if(add)
+    if (add)
       FINISHED = I == X.length;
   }
 
   this.stepBackward = function () {
-
+    ISPAUSED = true;
     if (STEP == 0)
       return;
+    var prev_STEP = STEP - 1;
+    this.clear();
+    this.drawCells();
+    this.drawTree();
+    while (prev_STEP > STEP)
+      this.stepForward();
   }
 
   this.stepFill = function () {
@@ -608,19 +628,7 @@ function RandomSearchTree() {
   }
 
   this.stepBackFill = function () {
-
-    STEP = 0;
-    FINISHED = false;
-
-    if (QUEUE.length > STEP) {
-      Tree = QUEUE[STEP].tree;
-      add = QUEUE[STEP].a;
-      I = QUEUE[STEP].i;
-      last_node = QUEUE[STEP].l;
-      PX = QUEUE[STEP].p;
-      return;
-    }
-
+    this.clear();
     this.drawCells();
     this.drawTree();
   }
