@@ -18,7 +18,9 @@
   this.STEP = 0;          //which step we're at in the algorithm
   this.VON = 0;           //von wo weg die Summe gilt.
   this.BIS = 0;           //bis wo hin die Summe gilt.
-    
+
+  this.disconnected = false;
+
   this.setAk = function(Ak, offset) {    
     //reset grid value.
     this.grid_Ak = [];
@@ -49,15 +51,22 @@
   var bigLoopCounter = 0;   //the one counting to 2^n  (number of partial sums to check)
   var smallLoopCounter = 0; //the one counting to n    (adding together partial sum);
   var INLOOP = false;
+  var last_hit = -1;
+  var von = -1;
+  var bis = -1;
 
   this.reset = function () {
     bigLoopCounter = 0;
     smallLoopCounter = 0;
     INLOOP = false;
+    last_hit = -1;
+    von = -1;
+    bis = -1;
+    this.disconnected = false;
   }
 
   this.stepForward = function () {
-    if (this.FINISHED || this.ISPAUSED)
+    if (this.FINISHED)
       return;
     this.STEP++;
 
@@ -83,15 +92,34 @@
       INLOOP = true;
       smallLoopCounter = 0;
       bigLoopCounter++;
+      last_hit = -1;
+      von = -1;
+      bis = -1;
+      this.disconnected = false;
       this.CUR_SUM = 0;
     }
 
     if (this.grid_Ak[smallLoopCounter].s == true) {
-      this.CUR_SUM += this.grid_Ak[smallLoopCounter].v;
-      this.grid_Ak[smallLoopCounter].c = this.added;
 
-      if (this.CUR_SUM > this.MAX_SUM) {
-        this.MAX_SUM = this.CUR_SUM;
+      if (last_hit == -1) {
+        von = smallLoopCounter;
+        last_hit = smallLoopCounter;
+      } else if (last_hit == smallLoopCounter - 1) {
+        last_hit = smallLoopCounter;
+      } else {
+        this.disconnected = true;
+      }
+
+      this.grid_Ak[smallLoopCounter].c = this.added;
+      if (!this.disconnected) {
+        this.CUR_SUM += this.grid_Ak[smallLoopCounter].v;
+        bis = smallLoopCounter;
+
+        if (this.CUR_SUM >= this.MAX_SUM) {
+          this.MAX_SUM = this.CUR_SUM;
+          this.BIS = bis;
+          this.VON = von;
+        }
       }
     }
     else
@@ -171,7 +199,7 @@ function LS_Method2() {
   }
 
   this.stepForward = function () {
-    if (this.FINISHED || this.ISPAUSED)
+    if (this.FINISHED)
       return;
     this.STEP++;
 
@@ -281,7 +309,7 @@ function LS_Method3() {
   }
 
   this.stepForward = function () {
-    if (this.FINISHED || this.ISPAUSED)
+    if (this.FINISHED)
       return;
     this.STEP++;
 
@@ -384,7 +412,7 @@ function LS_Method4() {
   }
 
   this.stepForward = function () {
-    if (this.FINISHED || this.ISPAUSED)
+    if (this.FINISHED)
       return;
     this.STEP++;
 
@@ -557,6 +585,8 @@ function LargestSum() {
       algo.CUR_SUM = 0;
       algo.MAX_SUM = 0;
       algo.STEP = 0;
+      algo.VON = -1;
+      algo.BIS = -1;
     }
   }
 
@@ -671,8 +701,11 @@ function LargestSum() {
   // if ISPAUSED is not set it will call stepForward()
   this.runInterval = function () {
     if (largestSum.active) {
-      for (var i = 0; i < algo_count; i++)
-        largestSum.getAlgo(i).stepForward();
+      for (var i = 0; i < algo_count; i++) {
+        var algo = largestSum.getAlgo(i);
+        if (!algo.ISPAUSED)
+          algo.stepForward();
+      }
       largestSum.drawCellsAll();
     }
   }
@@ -692,9 +725,9 @@ function LargestSum() {
   this.stepFill = function (algoNum) {
     var algo = this.getAlgo(algoNum);
     algo.ISPAUSED = true;
-    while (!algo.FINISHED)
-      algo.stepForward();
-    this.drawCellsAll();
+    algo.stepForward();
+    this.drawCells(algo.grid_Ak, algo.name);
+    this.updateText();
   }
 
 
@@ -702,15 +735,12 @@ function LargestSum() {
 
     for (var i = 0; i < algo_count; i++) {
       var algo = this.getAlgo(i);
-      var id = "method_" + (i+1) + "_header";
+      var id = "method_" + (i + 1) + "_header";
 
       document.getElementById(id).innerHTML =
         "Step: " + algo.STEP + "/" + algo.expectedSteps(A.length) + "<br>" +
-        "Current-Sum = " + algo.CUR_SUM + "<br>" +
-        "Max-Sum = " + algo.MAX_SUM +
-
-        ((i == 0) ? "" : (", from " + algo.VON + " to " + algo.BIS));
-
+        "Current-Sum = " + algo.CUR_SUM + ((i == 0 && algo.disconnected) ? ", DISC.<br>" : "<br>") +
+        "Max-Sum = " + algo.MAX_SUM + ", from " + (algo.VON < 0 ? "_" : algo.VON) + " to " + (algo.BIS < 0 ? "_" : algo.BIS);
     }
   }
 };

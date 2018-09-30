@@ -3,9 +3,10 @@ function RandomSearchTree() {
 
   //consts.
   const font_size = 24;
-  const bit_count = 4;
-  const max_count = 16;
-  const header_diff = 150;
+  const bit_count = 6;      
+  const max_count = 16;     // maximum allowed size for the input array.
+  const header_diff = 150;  // distance of the 'seperator' from the right side
+                            // between the tree-area and the grid-area.
   const cell_size = 40;
   const grid_border = 10;
   const exec_interval = 50;  //ms
@@ -17,18 +18,17 @@ function RandomSearchTree() {
   
   var speed = 5;
     
-  var grid_thickness = 3;
-  var grid_color = "#222222";
+  const grid_thickness = 3;
+  const grid_color = "#222222";
   
 
   //global algorithm variables
   var X = [];       //variables to be stored in tree
   var PX = [];      //priority of variables
   var Tree = null;  //the tree itself
-  var I = 0;        //counter for X/PX
+  var I = 0;        //counter for X / PX
 
   var STEP = 0;
-  var QUEUE = [];
 
 
   var FINISHED = false;
@@ -148,15 +148,17 @@ function RandomSearchTree() {
     for (var i = 0; i < resStr.length && i < max_count; i++) {
       X[i] = parseInt(resStr[i]);
 
-      if (X[i] < 0) {
-          warn = true;
-          X[i] = 0;
+      if (X[i] < 0 || isNaN(X[i])) {
+        warn = true;
+        X[i] = 0;
       }
       else if (X[i] > 20) {
-          warn = true;
-          X[i] = 20;
+        warn = true;
+        X[i] = 20;
       }
     }
+    if (resStr.length > max_count)
+      warn = true;
 
     if (warn)
       window.alert("Some elements were cropped to be within 0 and 20 and the total of " + max_count + " elements.");
@@ -181,10 +183,21 @@ function RandomSearchTree() {
   }
 
   this.genExample = function () {
-    X = [];
-    var length = Math.floor(Math.random() * (max_count - 5)) + 5; //random value inbetween 5 and max_count
-    for(i = 0; i < length; i++)
-      X[i] = Math.floor(Math.random() * 21);
+    X = []; 
+
+    // random value inbetween 5 and max_count for the length of the input array.
+    var length = Math.floor(Math.random() * (max_count - 5)) + 5; 
+
+    // we fill X with numbers 1,2,3,... length-1 and shuffle them
+    // thus creating an example that will be easier to follow then multiple same numbers.
+    var arr = [];
+    for (i = 0; i < length; i++)
+      arr[i] = i + 1;
+    for (i = 0; i < length; i++) {
+      var index = Math.floor(Math.random() * arr.length);
+      X[i] = arr[index];
+      arr.splice(index, 1);
+    }
 
     var textbox = document.getElementById("avals").value = X.toString();
     this.calculateCells();
@@ -213,6 +226,7 @@ function RandomSearchTree() {
     //top left corner of the grid
     var x_off = canvas.width - header_diff + grid_border;
     var y_off = grid_border;
+    var px_cell_width = cell_size * 2.5;
 
     //draw top-left box for [x]
     context.beginPath();
@@ -228,11 +242,11 @@ function RandomSearchTree() {
     context.beginPath();
     context.strokeStyle = grid_color;
     context.lineWidth = grid_thickness;
-    context.rect(x_off + cell_size, y_off, cell_size * 2, cell_size);
+    context.rect(x_off + cell_size, y_off, px_cell_width, cell_size);
     context.stroke();
     str_width = context.measureText("p(x)").width;
     context.fillStyle = grid_color;
-    context.fillText("p(x)", x_off + (cell_size * 2) - (str_width / 2), y_off + (cell_size / 2) + font_size / 4.0);
+    context.fillText("p(x)", x_off + (cell_size + (px_cell_width / 2)) - (str_width / 2), y_off + (cell_size / 2) + font_size / 4.0);
 
     y_off += cell_size;
 
@@ -253,11 +267,11 @@ function RandomSearchTree() {
       context.beginPath();
       context.strokeStyle = grid_color;
       context.lineWidth = grid_thickness;
-      context.rect(x_off + cell_size, y_off, cell_size * 2, cell_size);
+      context.rect(x_off + cell_size, y_off, px_cell_width, cell_size);
       context.stroke();
       str_width = context.measureText(PX[i]).width;
       context.fillStyle = grid_color;
-      context.fillText(PX[i], x_off + (cell_size * 2) - (str_width / 2), y_off + (cell_size / 2) + font_size / 4.0);
+      context.fillText(PX[i], x_off + (cell_size + (px_cell_width / 2)) - (str_width / 2), y_off + (cell_size / 2) + font_size / 4.0);
 
       y_off += cell_size;
     }
@@ -273,9 +287,11 @@ function RandomSearchTree() {
     context.font = "bold " + font_size + "px Consolas"
     context.globalCompositeOperation = "source-over";
 
-    var curLevel = [Tree];
+    var curLevel = [Tree];      //The horizontal level (line) for the currently drawn tree.
+                                // an array containing the nodes that are placed on said level in order.
+                                // or null if there is no node.
     var dont_continue = false;
-    var y = 50;
+    var y = 50;                 // y distance from the top of canvas. 
 
     while (!dont_continue) {
       
@@ -291,14 +307,17 @@ function RandomSearchTree() {
         curLevel[i].y = y;
       }
 
+      // build the curLevel array with all the nodes or 'null' necessary
+      // if there are no further nodes (all null) we end the loop.
 
       dont_continue = true;
       var tmpLevel = [];
-      for (var i = 0; i < curLevel.length; i++) {
+
+      for (var i = 0; i < curLevel.length; i++) {   //go over all nodes on the current level
         var node = curLevel[i];
-        if (node == null) {
-          tmpLevel.push(null);
-          tmpLevel.push(null);
+        if (node == null) {         // if, on current level, one node is null (not present)
+          tmpLevel.push(null);      // we push two child nodes as null.
+          tmpLevel.push(null);      // this is done for spacing, otherwise the real child nodes are gonne be misplaced.
         }
         else {
           tmpLevel.push(node.l);
@@ -312,7 +331,6 @@ function RandomSearchTree() {
     }
 
     this.drawNode(Tree);
-
   }
 
   // Draws the passed node at it's given x and y coordinates as well as all
@@ -380,13 +398,19 @@ function RandomSearchTree() {
     return newNodeValue;
   }
 
-  // inserts node into the tree
+  // inserts node into the tree as a leaf at the end.
+  // depending on the internal value, we walk down the tree until we reach a 'null' leaf where the node
+  // will be attached.
+  // Note: The tree is itself just a node.
   this.insert = function (tree, node) {
 
     if (node == null)
       return;
 
     var leaf = tree;
+
+    // loop until we reach a null-leaf and then break
+    // (could probably also have been done as recursive call, but I think this is easier to read)
     while (true) {
 
       //continue down the right sub-node
@@ -432,9 +456,9 @@ function RandomSearchTree() {
       
       //set bits of priority if they haven't been calculated yet.
       if(PX[node.i][i] == '_')
-        PX[node.i] = PX[node.i].replaceAt(i, Math.round(Math.random()).toString());
+        PX[node.i] = PX[node.i].replaceAt(i, Math.round(Math.random()).toString());       // if priority on bit-index is '_', set it to random '1' or '0'
       if (PX[node.p.i][i] == '_')
-        PX[node.p.i] = PX[node.p.i].replaceAt(i, Math.round(Math.random()).toString());
+        PX[node.p.i] = PX[node.p.i].replaceAt(i, Math.round(Math.random()).toString());   // same for parent node.
 
       //compare: if prio(parent) is bigger than prio(node), return true, otherwise false
       //         if equal, continue.
@@ -485,34 +509,9 @@ function RandomSearchTree() {
     if (FINISHED)
       return;
 
-    if (QUEUE.length > STEP) {
-      Tree = QUEUE[STEP].tree;
-      add = QUEUE[STEP].a;
-      I = QUEUE[STEP].i;
-      last_node = QUEUE[STEP].l;
-      PX = QUEUE[STEP].p;
-
-      STEP++;
-      this.drawCells();
-      this.drawTree();
-
-      if (add)
-        FINISHED = I == X.length;
-      return;
-    }
-
-    QUEUE[STEP] = {
-      tree: Tree,
-      i: I,
-      a: add,
-      l: last_node,
-      p: PX,
-    }
-    STEP++;
 
     if (add) {
       var node = this.nodeValue(X[I], I);
-      //PX[I] = PX[I].replaceAt(0, Math.round(Math.random()).toString());
 
       if (Tree == null)
         Tree = node;
@@ -579,6 +578,9 @@ function RandomSearchTree() {
         Tree = last_node;
     }
 
+    // after adding or moving the node up by one,
+    // we check the tree to see if it is now in proper priority order.
+    // ... it not, we need to keep on 'sorting' (indicated by add==false).
     add = this.checkNode(last_node);
     if (add)
       last_node.c = "white";
@@ -587,7 +589,9 @@ function RandomSearchTree() {
 
     this.drawCells();
     this.drawTree();
-
+    
+    // if add is true (indicating that tree is sorted)
+    // and the Index counter is the same as the array length, we are done.
     if(add)
       FINISHED = I == X.length;
   }
@@ -596,21 +600,6 @@ function RandomSearchTree() {
 
     if (STEP == 0)
       return;
-
-    STEP--;
-    FINISHED = false;
-
-    if (QUEUE.length > STEP) {
-      Tree = QUEUE[STEP].tree;
-      add = QUEUE[STEP].a;
-      I = QUEUE[STEP].i;
-      last_node = QUEUE[STEP].l;
-      PX = QUEUE[STEP].p;
-      return;
-    }
-
-    this.drawCells();
-    this.drawTree();
   }
 
   this.stepFill = function () {

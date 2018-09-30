@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
   <head>
     <meta charset="UTF-8">
@@ -113,6 +113,10 @@
     var algorithm;
 
     function load() {
+
+      var div = document.getElementById("script");
+      div.parentNode.removeChild(div);
+
       algorithms.push({algo: 0, url: 'externals/chgs/webpage.html', text: 'Convex Hull Graham Scan'})
       algorithms.push({algo: 1, url: 'externals/chii/webpage.html', text: 'Convex Hull Iterative Insert'})
       algorithms.push({algo: 2, url: 'externals/lsi/webpage.html', text: 'Line Segment Intersections'})
@@ -225,12 +229,15 @@
         <button id="1" onclick="loadExternalHTML(1)">Convex Hull Iterative Insert</button>
         <button id="2" onclick="loadExternalHTML(2)">Line Segment Intersections</button>
         <button id="3" onclick="loadExternalHTML(3)">Longest Common Subsequence</button>
-        <button id="4" onclick="loadExternalHTML(4)">Mininal Spanning Tree</button>
+        <button id="4" onclick="loadExternalHTML(4)">Minimal Spanning Tree</button>
         <button id="5" onclick="loadExternalHTML(5)">Scanline</button>
-        <button id="6" onclick="loadExternalHTML(6)">Largest Sum</button>
+        <button id="6" onclick="loadExternalHTML(6)">Maximum Subarray</button>
         <button id="7" onclick="loadExternalHTML(7)">Ramdom Search Tree</button>
         <button id="8" onclick="loadExternalHTML(8)">Minimum Weight Triangulation</button>
       </div>
+    </div>
+    <div id="script">
+      <p>This page needs JavaScript enabled to work.</p>
     </div>
     <div id="external_page">
     </div>

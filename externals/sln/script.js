@@ -50,7 +50,7 @@ function Scanline() {
   var V = 1;
   var K = 1;
   var T = 0;
-  var ALL_QUEUE = [];
+  var SUM_QUEUE = [];
 
   var FINISHED = false;
   var ISPAUSED = true;
@@ -133,7 +133,7 @@ function Scanline() {
 
     FINISHED = false;
     ISPAUSED = true;
-    ALL_QUEUE = [];
+    SUM_QUEUE = [];
     this.updateWrittenSum();
   }
 
@@ -163,11 +163,11 @@ function Scanline() {
     for(i = 0; i < A.length; i++) {
       grid_k[i] = this.CellValue(
         x_off + (i * cell_size),    //x offset = left-offset of the grid + (current index * cell size)
-        y_off,                      //y offset = const top-offset of the grid.
+        y_off + cell_size,          //y offset = const top-offset of the grid + cell size (that is to say, one grid row lower)
         i + 1);                     //value    = index + 1;
       grid_Ak[i] = this.CellValue(
         x_off + (i * cell_size),    //x offset = same as above
-        y_off + cell_size,          //y offset = const top-offset of the grid + cell size (that is to say, one grid row lower)
+        y_off,                      //y offset = const top-offset of the grid.
         A[i]);                      //value    = current value in A.
     }
 
@@ -243,19 +243,49 @@ function Scanline() {
   this.drawDiagram = function () {
 
     context.clearRect(0, cell_size * 2.5, canvas.width, diagram_height + cell_size);
+    context.font = font_size + "px Consolas"
+    context.globalCompositeOperation = "source-over";
 
+    //draw 'brakets' that show the region being covered by the current sum:
+    if(V <= K)
+    {
+      var x_k = grid_k[K - 1].x + (cell_size / 2) + (cell_size / 4);
+      var x_v = grid_k[V - 1].x + (cell_size / 2) - (cell_size / 4);
+
+      var multi = 2.75;
+
+      context.beginPath();
+      context.strokeStyle = "black";
+      context.lineWidth = 0.5;
+      context.moveTo(x_v, cell_size * 2.5);
+      context.lineTo(x_v, cell_size * multi);
+      context.lineTo(x_k, cell_size * multi);
+      context.lineTo(x_k, cell_size * 2.5);
+      context.stroke();
+    }
+
+
+
+    var y_top = cell_size * 3;
     var step = Math.ceil(expected_sum / 10);    // units per step
 
     var x_from = grid_k[0].x;
     var x_to = grid_k[grid_k.length - 1].x + cell_size;
 
 
-    context.font = font_size + "px Consolas"
-    context.globalCompositeOperation = "source-over";
+    var x_dotted = grid_k[K - 1].x + (cell_size / 2);
+    context.beginPath();
+    context.strokeStyle = "darkgreen";
+    context.lineWidth = 2;
+    context.setLineDash([10, 10]);
+    context.moveTo(x_dotted, y_top);
+    context.lineTo(x_dotted, y_top + diagram_height);
+    context.stroke();
+    context.setLineDash([]);
 
     for (var s = 0; s <= expected_sum; s += step) {
 
-      var y = (cell_size * 3) + (diagram_height - (diagram_ratio * s));
+      var y = y_top + (diagram_height - (diagram_ratio * s));
 
       context.beginPath();
       context.strokeStyle = "black";
@@ -275,8 +305,8 @@ function Scanline() {
 
       var t = T
       if (i != K)
-        t = ALL_QUEUE[i].t;
-      var y = (cell_size * 3) + (diagram_height - (diagram_ratio * t));
+        t = SUM_QUEUE[i].t;
+      var y = y_top + (diagram_height - (diagram_ratio * t));
       var x = grid_k[i - 1].x + (cell_size / 2);
 
       context.beginPath();
@@ -338,13 +368,8 @@ function Scanline() {
     if (FINISHED)
       return;
     
-    ALL_QUEUE[K - 1] = {
-      v: V,
-      //k: K,
+    SUM_QUEUE[K - 1] = {
       t: T,
-      von: VON,
-      bis: BIS,
-      max: MAX,
     };
 
     T += A[K - 1];
@@ -365,23 +390,16 @@ function Scanline() {
     FINISHED = K > A.length;
   }
 
+  var previous_K = 0;
   this.stepBackward = function () {
-    FINISHED = false;
+
     if (K == 1)
       return;
-    K--;
 
-    var past = ALL_QUEUE[K - 1];  // K-1 da K bei 1 startet.
-
-    this.updateCells();
-    this.updateWrittenSum();
-
-    V = past.v;
-    T = past.t;
-    VON = past.von;
-    BIS = past.bis;
-    MAX = past.max;
-
+    previous_K = K - 1;
+    this.clear();
+    while (K != previous_K)
+      this.stepForward();
   }
 
   this.stepFill = function () {
@@ -390,8 +408,8 @@ function Scanline() {
   }
 
   this.stepBackFill = function () {
-    while (K != 1)
-      this.stepBackward();
+    this.clear();
+    this.stepForward();
   }
 
 
@@ -404,19 +422,18 @@ function Scanline() {
 
 
   this.updateWrittenSum = function () {
-    var this_v = V;
-    var this_k = K;
-    if (this_v > K)
-      this_v--;
 
-    if (this_k == 0) {
+    if (SUM_QUEUE.length == 0) {
       document.getElementById("current_sum_header").innerHTML = "None yet"
+    }
+    else if (V > K) {
+      document.getElementById("current_sum_header").innerHTML = "Reached 0<br>Started New Sum"
     }
     else {
       document.getElementById("current_sum_header").innerHTML =
         "Sum  = " + T + "<br>" +
-        "From = " + this_v + "<br>" +
-        "To   = " + this_k;
+        "From = " + V + "<br>" +
+        "To   = " + K;
     }
 
     if (MAX == 0) {
