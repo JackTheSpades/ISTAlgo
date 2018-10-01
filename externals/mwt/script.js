@@ -166,7 +166,7 @@ function MinimumWeightTriangulation() {
         if (i < L.length && j < L[i].length && !(L[i][j] === undefined)) {          
           var text = "\u221E";  //infinity
           if (!isNaN(L[i][j]))
-            text = Math.round(L[i][j] / 10);
+            text = Math.round(L[i][j]);
           var width = contextGrid.measureText(text).width / 2;
           contextGrid.fillText(text, x + (cell_size / 2) - width, y + (cell_size / 2) + font_size / 4.0);
         }
@@ -248,6 +248,10 @@ function MinimumWeightTriangulation() {
   //checks if the line segment from p1-p2 intersects with q1-q2
   this.intersect = function (p1, p2, q1, q2) {
 
+    //if either the p or q line share a start/end point, we don't need to check.
+    if (p1 === q1 || p1 === q2 || p2 === q1 || p2 === q2)
+      return false;
+
     //line equation: y(x) = kx + d; k=slope, d=offset
 
     var pk = (p1.y - p2.y) / (p1.x - p2.x);
@@ -291,7 +295,6 @@ function MinimumWeightTriangulation() {
       (pRect.top <= y && pRect.bottom >= y) &&
       (qRect.left <= x && qRect.right >= x) &&
       (qRect.top <= y && qRect.bottom >= y);
-
   }
 
   this.redrawCanvas = function () {
@@ -312,7 +315,7 @@ function MinimumWeightTriangulation() {
 
     allPoints.forEach(function (point) { minimumweighttriangulation.drawPoint(point); });
 
-    if (!FINISHED || true) {
+    if (!FINISHED) {
       if (l != 0) {
         //current polygon from i to j
         context.beginPath();
@@ -358,12 +361,14 @@ function MinimumWeightTriangulation() {
 
     context.lineWidth = dot_circle_thickness;
     context.strokeStyle = dot_circle_color;
+    context.setLineDash([10, 10]);
     context.beginPath();
     context.moveTo(allPoints[min].x, allPoints[min].y);
     context.lineTo(allPoints[max].x, allPoints[max].y);
     context.lineTo(allPoints[s].x, allPoints[s].y);
     context.closePath();
     context.stroke();
+    context.setLineDash([]);
 
     this.drawTriangle(min, s);
     this.drawTriangle(s, max);
@@ -417,9 +422,10 @@ function MinimumWeightTriangulation() {
     var u = this.circumfrence(I, J, K);
     var cur = L[I][K] + L[K][J] + u;
 
-    if (isNaN(prev))
+    if (isNaN(prev)) {
       L[I][J] = cur;
-    else if (!isNaN(cur) && cur < prev) {
+      S[I][J] = K;
+    } else if (!isNaN(cur) && cur < prev) {
       L[I][J] = cur;
       S[I][J] = K;
     }
@@ -595,40 +601,82 @@ function MinimumWeightTriangulation() {
     return returnValue;
   }
 
-  this.euclideanDistance = function(p1, p2) {
-    return Math.sqrt(((p1.x - p2.x)*(p1.x - p2.x)) + ((p1.y - p2.y)*(p1.y - p2.y)));
+  this.euclideanDistance = function (p1, p2) {
+    return Math.sqrt(((p1.x - p2.x) * (p1.x - p2.x)) + ((p1.y - p2.y) * (p1.y - p2.y)));
   }
+  this.euclideanDistanceNorm = function (p1, p2) {
+
+    var scale = function (input) {
+
+      //input can go
+      //  from:    min_object_distance
+      //  to:      canvas.width - min_object_distance
+      //provided the default values didn't change, that's 20 - 480
+      // we map that to 0 - 100
+
+      //k = delta_y / delta_x
+      var k = 100 / ((canvas.width - min_object_distance) - min_object_distance);
+      //y(20) = 0 -> 20*k + d = 0 -> d = -20*k;
+      var d = -min_object_distance * k;
+
+      return input * k + d;
+    }
+
+    var p1x = scale(p1.x);
+    var p2x = scale(p2.x);
+    var p1y = scale(p1.y);
+    var p2y = scale(p2.y);
+
+    return Math.sqrt(((p1x - p2x) * (p1x - p2x)) + ((p1y - p2y) * (p1y - p2y)));
+  }
+
 
   this.circumfrence = function(i, j, k) {
 
-    //check if point k is within the polygon spanned by all points except k.
-    //if so, then the triangle is outside the full polygon and thus we return NaN.
+    if (!this.LineIntersecting(i, j) ||
+        !this.LineIntersecting(i, k) ||
+        !this.LineIntersecting(k, j) ||
+        !this.LineInside(i, j) ||
+        !this.LineInside(i, k) ||
+        !this.LineInside(k, j))
+      return Number.NaN;
 
-    //we use raycast
-    var inside = false;
+    return this.euclideanDistanceNorm(allPoints[i], allPoints[j]) + 
+      this.euclideanDistanceNorm(allPoints[j], allPoints[k]) + 
+      this.euclideanDistanceNorm(allPoints[k], allPoints[i]);
 
-    if(((j + 1) % allPoints.length != i) && false) {
-      for(var cnt = 0; cnt < allPoints.length; cnt++) {
+  }
 
-        var p1 = cnt;
-        var p2 = (cnt + 1) % allPoints.length;
+  this.LineInside = function (a, b) {
 
-        //if (this.intersect(allPoints[i], allPoints[j], allPoints[p1], allPoints[p2]))
-        //  inside = !inside;
+    if (Math.abs(a - b) == 1 || Math.abs(a - b) == allPoints.length - 1)
+      return true;
 
-          //if (((point1.y > pointK.y) != (point2.y > pointK.y)) &&
-          //  (pointK.x < (point2.x - point1.x) * (pointK.y - point1.y) / (point2.y - point1.y) + point1.x))
-          //  inside = !inside;
-      }
-
-      if(inside)
-        return Number.NaN;
+    var middlePoint = {
+      x: (allPoints[a].x + allPoints[b].x) / 2,
+      y: (allPoints[a].y + allPoints[b].y) / 2
+    };
+    var rightPoint = {
+      x: canvas.width * 2,
+      y: middlePoint.y
     }
 
-    return this.euclideanDistance(allPoints[i], allPoints[j]) + 
-      this.euclideanDistance(allPoints[j], allPoints[k]) + 
-      this.euclideanDistance(allPoints[k], allPoints[i]);
+    var inside = false;
+    for (var i = 0; i < allPoints.length; i++)
+      if (this.intersect(middlePoint, rightPoint, allPoints[i], allPoints[(i + 1) % allPoints.length]))
+        inside = !inside;
+    return inside;
+  }
 
+  this.LineIntersecting = function (a, b) {
+
+    if (Math.abs(a - b) == 1 || Math.abs(a - b) == allPoints.length - 1)
+      return true;
+
+    for (var i = 0; i < allPoints.length; i++)
+      if (this.intersect(allPoints[a], allPoints[b], allPoints[i], allPoints[(i + 1) % allPoints.length]))
+        return false;
+    return true;
   }
 
   this.Point = function(x_coord, y_coord) {
