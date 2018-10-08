@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 
 <head>
@@ -268,7 +268,9 @@
                 onkeypress="scanline.restrictKeyPress(event)"
                 onblur="scanline.onBlur(this)">
             </td>
-            <td><input style="white-space: normal;" class="wide_control" type="button" onclick="scanline.genExample()" value="Random"></td>
+            <td>
+              <input style="white-space: normal;" type="button" onclick="scanline.genExample()" value="Random Input">
+            </td>
           </tr>
         </table>
         <div id="content" class="unselectable">

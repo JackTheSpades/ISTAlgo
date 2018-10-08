@@ -58,6 +58,9 @@
     .wide_control {
       width: 70px;
     }
+    .wider_control {
+      width: 140px;
+    }
 
     #input {
       margin: 0 auto;
@@ -257,7 +260,10 @@
                 onkeypress="largestSum.restrictKeyPress(event)"
                 onblur="largestSum.onBlur(this)">
             </td>
-            <td><input style="white-space: normal;" class="wide_control" type="button" onclick="largestSum.genExample()" value="Random"></td>
+            <td>
+              <input style="white-space: normal;" type="button" onclick="largestSum.genExample()" value="Random Input">
+              <input style="white-space: normal;" type="button" onclick="largestSum.reset()" value="Reset">
+            </td>
           </tr>
         </table>
         <table class="uselectable", style="margin-top: 20px">

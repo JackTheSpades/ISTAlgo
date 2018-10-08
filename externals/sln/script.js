@@ -4,6 +4,7 @@ function Scanline() {
   //consts.
   const font_size = 24;
   const max_count = 20;
+  const max_value = 99;
   const header_diff = 70;
   const cell_size = 40;
   const grid_border = 10;
@@ -88,8 +89,10 @@ function Scanline() {
       charCode == 44 ||                     // ,
       charCode == 45;                       // -
 
-    if(!valid)
+    if (!valid)
       event.preventDefault();
+    else if (keycode == 13)
+      this.onBlur(document.getElementById("avals"));
   }
 
   // fills the Array A with the contents of the textbox
@@ -102,18 +105,22 @@ function Scanline() {
     for (var i = 0; i < resStr.length && i < max_count; i++) {
       A[i] = parseInt(resStr[i]);
 
-      if (A[i] < -10) {
-          warn = true;
-          A[i] = -10;
+      if (A[i] < -max_value) {
+        warn = true;
+        A[i] = -max_value;
       }
-      else if (A[i] > 10) {
-          warn = true;
-          A[i] = 10;
+      else if (A[i] > max_value) {
+        warn = true;
+        A[i] = max_value;
+      }
+      else if (A[i] === undefined) {
+        warn = true;
+        A[i] = 0;
       }
     }
 
     if (warn)
-      window.alert("Some elements were cropped to be within -10 and 10 and the total of " + max_count + " elements.");
+      window.alert("Some elements were cropped to be within -" + max_value + " and " + max_value + " and the total of " + max_count + " elements.");
   }
     
   this.onBlur = function(textbox) {
@@ -141,7 +148,7 @@ function Scanline() {
     A = [];
     var length = Math.floor(Math.random() * (max_count - 5)) + 5; //random value inbetween 5 and max_count
     for(i = 0; i < length; i++)
-      A[i] = Math.floor(Math.random() * 20) - 10;
+      A[i] = Math.floor(Math.random() * (max_value * 2)) - max_value;
 
     var textbox = document.getElementById("avals").value = A.toString();
     this.calculateCells();
@@ -325,6 +332,24 @@ function Scanline() {
       x_prev = x;
       y_prev = y;
     }
+
+    if (VON != BIS) {
+      context.beginPath();
+      context.fillStyle = "rgba(0,128,0,0.5)";
+      context.moveTo(grid_k[VON - 1].x + (cell_size / 2), y_top + diagram_height);
+      for (var i = VON; i <= BIS; i++) {
+        var t = T;
+        if (i != K)
+          t = SUM_QUEUE[i].t;
+        var y = y_top + (diagram_height - (diagram_ratio * t));
+        var x = grid_k[i - 1].x + (cell_size / 2);
+        context.lineTo(x, y);
+      }
+      context.lineTo(grid_k[BIS - 1].x + (cell_size / 2), y_top + diagram_height);
+      context.closePath();
+      context.fill();
+    }
+
   }
 
   // returns a cell object with 4 variables:

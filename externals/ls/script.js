@@ -461,6 +461,7 @@ function LargestSum() {
   //consts.
   const font_size = 24;
   const max_count = 20;
+  const max_value = 99;
   const header_diff = 100;
   const cell_size = 40;
   const grid_border = 10;
@@ -543,6 +544,8 @@ function LargestSum() {
 
     if (!valid)
       event.preventDefault();
+    else if (keycode == 13)
+      this.onBlur(document.getElementById("avals"));
   }
 
   // fills the Array A with the contents of the textbox
@@ -555,22 +558,31 @@ function LargestSum() {
     for (var i = 0; i < resStr.length && i < max_count; i++) {
       A[i] = parseInt(resStr[i]);
 
-      if (A[i] < -10) {
-          warn = true;
-          A[i] = -10;
+      if (A[i] < -max_value) {
+        warn = true;
+        A[i] = -max_value;
       }
-      else if (A[i] > 10) {
-          warn = true;
-          A[i] = 10;
+      else if (A[i] > max_value) {
+        warn = true;
+        A[i] = max_value;
+      }
+      else if (A[i] === undefined) {
+        warn = true;
+        A[i] = 0;
       }
     }
 
-    if (warn)
-      window.alert("Some elements were cropped to be within -10 and 10 and the total of " + max_count + " elements.");
+    if (warn) {
+      window.alert("Some elements were cropped to be within -" + max_value + " and " + max_value + " and the total of " + max_count + " elements.");
+      textbox.value = A.toString();
+    }
   }
     
   this.onBlur = function(textbox) {
     this.validateAndUpdate(textbox)
+    this.reset();
+  }
+  this.reset = function () {
     this.calculateCells();
     this.drawCellsAll();
     this.clear();
@@ -594,7 +606,7 @@ function LargestSum() {
     A = [];
     var length = Math.floor(Math.random() * (max_count - 5)) + 5; //random value inbetween 5 and max_count
     for(i = 0; i < length; i++)
-      A[i] = Math.floor(Math.random() * 20) - 10;
+      A[i] = Math.floor(Math.random() * (max_value * 2)) - max_value;
 
     var textbox = document.getElementById("avals").value = A.toString();
     this.calculateCells();
@@ -738,9 +750,9 @@ function LargestSum() {
       var id = "method_" + (i + 1) + "_header";
 
       document.getElementById(id).innerHTML =
-        "Step: " + algo.STEP + "/" + algo.expectedSteps(A.length) + "<br>" +
-        "Current-Sum = " + algo.CUR_SUM + ((i == 0 && algo.disconnected) ? ", DISC.<br>" : "<br>") +
-        "Max-Sum = " + algo.MAX_SUM + ", from " + (algo.VON < 0 ? "_" : algo.VON) + " to " + (algo.BIS < 0 ? "_" : algo.BIS);
+        "step: " + algo.STEP + "/" + algo.expectedSteps(A.length) + "<br>" +
+        "current sum = " + algo.CUR_SUM + ((i == 0 && algo.disconnected) ? ", DISC.<br>" : "<br>") +
+        "max sum = " + algo.MAX_SUM + ", from " + (algo.VON < 0 ? "_" : algo.VON + 1) + " to " + (algo.BIS < 0 ? "_" : algo.BIS + 1);
     }
   }
 };
