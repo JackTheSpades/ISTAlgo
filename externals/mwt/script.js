@@ -42,6 +42,8 @@ function MinimumWeightTriangulation() {
   
   //global algorithm variables
   var FINISHED = false;
+  var FINISHED_PHASE1 = false;
+  var FINISHED_PHASE2 = false;
   var ISPAUSED = true;
   
   var I;
@@ -52,6 +54,7 @@ function MinimumWeightTriangulation() {
 
   var IN_I = false;
   var IN_K = false;
+  var S_Queue = [];
 
   this.initialize = function () {
     content_div = document.getElementById("content")
@@ -95,12 +98,15 @@ function MinimumWeightTriangulation() {
   this.reset = function () {
     stepCount = 0;
     FINISHED = false;
+    FINISHED_PHASE1 = false;
+    FINISHED_PHASE2 = false;
     ISPAUSED = true;
     I = 0;
     l = 0;
     K = 1;
     IN_I = false;
     IN_K = false;
+    S_Queue = [];
 
     L = [];
     S = [];
@@ -239,7 +245,20 @@ function MinimumWeightTriangulation() {
     contextGrid.font = "bold " + font_size + "px TimesNewRoman";
     contextGrid.globalCompositeOperation = "source-over";
     for (var i = 0; i < lines.length; i++) {
-      contextGrid.fillText(lines[i].replace("NaN", "\u221E"), x, y + 15 + font_size / 4.0)
+      contextGrid.fillText(lines[i].replace(/NaN/g, "\u221E"), x, y + 15 + font_size / 4.0)
+      y += 30;
+    }
+  }
+  this.writeTop = function (lines) {
+    var border = dotted_thickness / 2 + min_object_distance;
+    var x = border;
+    var y = border + 30;  //30px as line height, +1 for padding
+
+    contextGrid.fillStyle = "#000000";
+    contextGrid.font = "bold " + font_size + "px TimesNewRoman";
+    contextGrid.globalCompositeOperation = "source-over";
+    for (var i = 0; i < lines.length; i++) {
+      contextGrid.fillText(lines[i].replace(/NaN/g, "\u221E"), x, y + 15 + font_size / 4.0)
       y += 30;
     }
   }
@@ -315,7 +334,7 @@ function MinimumWeightTriangulation() {
 
     allPoints.forEach(function (point) { minimumweighttriangulation.drawPoint(point); });
 
-    if (!FINISHED) {
+    if (!FINISHED_PHASE1) {
       if (l != 0) {
         //current polygon from i to j
         context.beginPath();
@@ -333,17 +352,45 @@ function MinimumWeightTriangulation() {
         context.lineTo(allPoints[K].x, allPoints[K].y);
         context.lineTo(allPoints[I + l].x, allPoints[I + l].y);
         context.fill();
+
       }
+      this.drawGrids();
     }
     else {
-      this.drawTriangle(0, allPoints.length - 1);
+      //this.drawTriangle(0, allPoints.length - 1);
+
+      var s_text = [];
+      for (var i = 0; i < S_Queue.length; i++) {
+        if (!isNaN(S_Queue[i].out) && S_Queue[i].out >= 0) {
+
+          var a = S_Queue[i].in1;
+          var b = S_Queue[i].in2;
+          var c = S_Queue[i].out;
+
+          s_text.push(`S[${a + 1}, ${b + 1}] = ${c + 1}`);
+
+          context.lineWidth = dot_circle_thickness;
+          context.strokeStyle = dot_circle_color;
+          context.setLineDash([10, 10]);
+          context.beginPath();
+          context.moveTo(allPoints[a].x, allPoints[a].y);
+          context.lineTo(allPoints[b].x, allPoints[b].y);
+          context.lineTo(allPoints[c].x, allPoints[c].y);
+          context.closePath();
+          context.stroke();
+          context.setLineDash([]);
+
+        }
+      }
+
+      contextGrid.clearRect(0, 0, canvasGrid.width, canvasGrid.height);
+      this.writeTop(s_text);
     }
 
-    this.drawGrids();
   }
   this.drawTriangle = function (a, b) {
     if (a == b)
-      return;
+      return -1;
 
     var min = Math.min(a, b);
     var max = Math.max(a, b);
@@ -353,25 +400,17 @@ function MinimumWeightTriangulation() {
     var s2 = S[max][min];
 
     if(s1 === undefined && s2 == undefined)
-      return;
+      return -1;
 
     var s = s2;
     if (s2 === undefined)
       s = s1;
+    return s;
 
-    context.lineWidth = dot_circle_thickness;
-    context.strokeStyle = dot_circle_color;
-    context.setLineDash([10, 10]);
-    context.beginPath();
-    context.moveTo(allPoints[min].x, allPoints[min].y);
-    context.lineTo(allPoints[max].x, allPoints[max].y);
-    context.lineTo(allPoints[s].x, allPoints[s].y);
-    context.closePath();
-    context.stroke();
-    context.setLineDash([]);
 
-    this.drawTriangle(min, s);
-    this.drawTriangle(s, max);
+
+    //this.drawTriangle(min, s);
+    //this.drawTriangle(s, max);
   }
 
   this.drawPoint = function (point) {
@@ -401,9 +440,85 @@ function MinimumWeightTriangulation() {
     return Math.round(val * Math.pow(10, precision)) / Math.pow(10, precision);
   }
 
-  this.stepForward = function() {
-    if (FINISHED) {
+  this.stepForward = function () {
+
+    if (allPoints.length <= 2) {
+      ISPAUSED = true;
+      FINISHED = true;
+    }
+
+    if (FINISHED || (FINISHED_PHASE1 && FINISHED_PHASE2)) {
       this.redrawCanvas();
+      FINISHED = true;
+      ISPAUSED = true;
+      return;
+    }
+
+    //sanity check
+    if (stepCount == 0) {
+
+      var sanity = true;
+
+      for (var i = 0; i < allPoints.length && sanity; i++) {
+
+        var line1_point1 = allPoints[i];
+        var line1_point2 = allPoints[(i + 1) % allPoints.length];
+
+        for (var j = i + 2; j < allPoints.length && sanity; j++) {
+
+          var line2_point1 = allPoints[j];
+          var line2_point2 = allPoints[(j + 1) % allPoints.length];
+
+          if (this.intersect(line1_point1, line1_point2, line2_point1, line2_point2))
+            sanity = false;
+        }
+      }
+
+      if (!sanity) {
+        window.alert("Non simple polygon is not accepted.");
+        return;
+      }
+    }
+
+
+    if (FINISHED_PHASE1 && !FINISHED_PHASE2) {
+
+      var result = null;
+      while (result === null) {
+        for (var i = 0; i < S_Queue.length; i++) {
+          if (isNaN(S_Queue[i].out)) {
+            result = S_Queue[i];
+            break;
+          }
+        }
+
+        if (result === null) {
+          this.redrawCanvas();
+          FINISHED_PHASE2 = true;
+          return;
+        }
+
+        result.out = this.drawTriangle(result.in1, result.in2);
+        if (result.out < 0)
+          result = null;
+      }
+
+      S_Queue.push(
+        {
+          in1: result.in1,
+          in2: result.out,
+          out: NaN,
+        });
+      S_Queue.push(
+        {
+          in1: result.out,
+          in2: result.in2,
+          out: NaN,
+        });
+
+      this.redrawCanvas();
+
+      stepCount++;
       return;
     }
 
@@ -415,10 +530,17 @@ function MinimumWeightTriangulation() {
       I = 0;
       K = 1;
       L[I][I + l] = Number.NaN;
+      S_Queue.push(
+        {
+          in1: 0,
+          in2: allPoints.length - 1,
+          out: NaN,
+        });
     }
 
     var J = I + l;
     var prev = L[I][J];
+    var prevS = S[I][J];
     var u = this.circumfrence(I, J, K);
     var cur = L[I][K] + L[K][J] + u;
 
@@ -434,7 +556,8 @@ function MinimumWeightTriangulation() {
     this.write([
       `i = ${I + 1},  j = ${J + 1},  k=${K + 1}`,
       `u(${I + 1},${J + 1},${K + 1}) = ${this.round(u, 3)}`,
-      `L[${I +1},${K +1}] = ${this.round(L[I][K], 3)},    L[${K +1},${J +1}] = ${this.round(L[K][J], 3)}`,
+      `L[${I + 1},${K + 1}] = ${this.round(L[I][K], 3)},    L[${K + 1},${J + 1}] = ${this.round(L[K][J], 3)}`,
+      `Prev: S[${I + 1},${J + 1}] = ${prevS + 1}, Current: ${S[I][J] + 1}`,
       `Prev: L[${I + 1},${J + 1}] = ${this.round(prev, 3)}, Current: ${this.round(cur, 3)}`
     ]);
 
@@ -455,8 +578,7 @@ function MinimumWeightTriangulation() {
     }
 
     if (l >= allPoints.length) {
-      FINISHED = true;
-      ISPAUSED = true;
+      FINISHED_PHASE1 = true;
     }
 
 
@@ -510,7 +632,7 @@ function MinimumWeightTriangulation() {
       if(evt.button == 2) { //right mouse button
         minimumweighttriangulation.deletePoint(clickedPoint, clickedPointIndex);
 
-        FINISHED = false;
+        FINISHED_PHASE1 = false;
         ISPAUSED = true;
 
         stepCount = 0;

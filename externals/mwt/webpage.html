@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 
 <head>
@@ -119,7 +119,7 @@
       margin-bottom: 20px;
     }
 
-    #algo_fill_expand, #algo_find_expand {
+    #algo_mwt_expand, #algo_mwt_expand {
       max-height: 0;
       overflow: hidden;
       transition: max-height 0.5s;
@@ -283,23 +283,27 @@
       <div id="algo_expand">
         <div id="algo_fill">
           <div>
-            <p><input id="algo_fill_toggle" type="checkbox" onclick="toggleExpand(this, 'algo_fill_expand')">
-              <label for="algo_fill_toggle" id="algo_fill_title"><b>[PSEUDOCODE] finding the hull </b></label></p>
+            <p><input id="algo_mwt_toggle" type="checkbox" onclick="toggleExpand(this, 'algo_mwt_expand')">
+              <label for="algo_mwt_toggle" id="algo_mwt_title"><b>[PSEUDOCODE] Minimum Weight Triangulation</b></label></p>
             </div>
-            <div id="algo_fill_expand">
+            <div id="algo_mwt_expand">
 <blockquote id="fill_block"><pre>
-(Find the lowest point p, sort the collection P = S\{p}
-by the polar angle &phi; with respect to p in descending order)
+u(i, j, k) := circumfrance of triangle spanned by point indices i, j and k.
 
-stack.push(P[1]);
-stack.push(P[2]);
-stack.push(P[3]);
-
-for(i = 4; i <= n; i++) {
-  while(&#8738;(stack.second(), stack.first(), P[i]) > &pi;) {
-    stack.pop();
-  }
-  stack.push(P[i]);
+for(i = 1; i <= n - 1; i++)
+    L[i, i + 1] = 0
+for(l = 2; l <= n - 1; l++) {
+    for(i = 1; i <= n - l; i++) {
+        j = i + l;
+        L[i, j] = &infin;;
+        for(k = i + 1; k <= j - 1; k++) {
+            x = L[i, k] + L[k, j] + u(i, j, k);
+            if(x < L[i, j]) {
+                L[i, j] = x;
+                S[i, j] = k;
+            }            
+        }
+    }
 }
 </pre></blockquote>
           </div>
