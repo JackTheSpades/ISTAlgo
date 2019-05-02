@@ -16,7 +16,8 @@ function MinimumWeightTriangulation() {
 
   var allPoints = new Array();
   var stepCount = 0;
-  var pointLimit = 10;
+  var retracking = false;
+  var pointLimit = 15;
 
   var font_size = 18;
 
@@ -28,10 +29,10 @@ function MinimumWeightTriangulation() {
   var dotted_rectangle_color = "#000000";
   var intersect_color = "#CC0000";
   var current_selection_color = "#B22222";
-
-  var hull_color = "#000088";
-  var dotted_line_color = "#999999"
-
+    
+  var triangle_color = "rgba(0,128,0,0.25)";
+  var polygon_color = "rgba(0,0,128,0.25)";
+  
   var dotted_thickness = "2";
   var dot_circle_thickness = "2";
   var dot_radius = 5;
@@ -135,24 +136,68 @@ function MinimumWeightTriangulation() {
               canvas.width  - dotted_thickness - 2 * min_object_distance,
               canvas.height - dotted_thickness - 2 * min_object_distance);
     context.stroke();
-    context.setLineDash([])
+    context.setLineDash([]);
   }
-  this.drawGrids = function() {
-    
+
+
+  this.drawGridsS = function () {
+
+    var highlight = function (i, j) {
+
+      var current_s = undefined;
+      for (var k = S_Queue.length - 1; k >= 0; k--)
+        if (!isNaN(S_Queue[k].out) && S_Queue[k].out >= 0) {
+          current_s = S_Queue[k];
+          break;
+        }
+
+      if (i === current_s.in1 && j === current_s.in2)
+        return triangle_color;
+      return false;
+    };
+    var numToText = function (num) {
+      return num + 1;
+    };
+
+    this.drawGrids(S, highlight, numToText, "S");
+  }
+  this.drawGridsL = function () {
+
+    var highlight = function (i, j) {
+      if (l !== 0 && I === i && j === (I + l)) {
+        return triangle_color;
+      }
+      if (l !== 0 && (i === I && j === K) || (i === K && j === (I + l))) {
+        return polygon_color;
+      }
+      return false;
+    };
+
+    var numToText = function (num) {
+      if (!isNaN(num))
+        return Math.round(num);
+      return "\u221E";  //infinity
+    };
+
+    this.drawGrids(L, highlight, numToText, "L");
+  };
+
+  this.drawGrids = function (matrix, highlight, numToText, name) {
+
     contextGrid.clearRect(0, 0, canvasGrid.width, canvasGrid.height);
-    if (L.length < 3)
+    if (matrix.length < 3)
       return;
 
     var border = dotted_thickness / 2 + min_object_distance;
-    var cell_size = 40;
+    var cell_size = 30;
     var x = 0;
     var y = 0;
 
-    for(var i = 0; i < L.length; i++)
-      for (var j = i + 1; j < L.length; j++) {
+    for (var i = 0; i < matrix.length; i++)
+      for (var j = i + 1; j < matrix.length; j++) {
 
         x = border + (cell_size * (j - 1));
-        y = border + (cell_size * i) + 2 * cell_size; //add additional 2 cell_sizes to make room for indecies.
+        y = border + (cell_size * i) + 3 * cell_size; //add additional 3 cell_sizes to make room for indecies and name.
 
         contextGrid.beginPath();
         contextGrid.strokeStyle = dotted_rectangle_color;
@@ -161,27 +206,26 @@ function MinimumWeightTriangulation() {
         contextGrid.rect(x, y, cell_size, cell_size);
         contextGrid.stroke();
 
-        if (l != 0 && I == i && j == (I + l)) {
-          contextGrid.fillStyle = "rgba(0,128,0,0.25)";
+        var high = highlight(i, j);
+        if (high !== false) {
+          contextGrid.fillStyle = high;
           contextGrid.fillRect(x, y, cell_size, cell_size);
         }
 
         contextGrid.fillStyle = "#000000";
         contextGrid.font = font_size + "px Consolas";
         contextGrid.globalCompositeOperation = "source-over";
-        if (i < L.length && j < L[i].length && !(L[i][j] === undefined)) {          
-          var text = "\u221E";  //infinity
-          if (!isNaN(L[i][j]))
-            text = Math.round(L[i][j]);
+        if (i < matrix.length && j < matrix[i].length && !(matrix[i][j] === undefined)) {
+          var text = numToText(matrix[i][j]);
           var width = contextGrid.measureText(text).width / 2;
           contextGrid.fillText(text, x + (cell_size / 2) - width, y + (cell_size / 2) + font_size / 4.0);
         }
       }
 
     //indecies for j ->
-    for (var j = 1; j < L.length; j++) {
+    for (var j = 1; j < matrix.length; j++) {
       x = border + (cell_size * (j - 1));
-      y = border + cell_size;
+      y = border + cell_size * 2;
 
       contextGrid.fillStyle = "#000000";
       contextGrid.font = "bold " + font_size + "px Consolas";
@@ -193,16 +237,25 @@ function MinimumWeightTriangulation() {
     //text for j ->
     {
       x = border;
-      y = border;
+      y = border + cell_size;
       var text = "j";
       var width = contextGrid.measureText(text).width / 2;
       contextGrid.fillText(text, x + (cell_size / 2) - width, y + (cell_size / 2) + font_size / 4.0);
       this.arrow(x + cell_size, y + cell_size / 2, x + cell_size * 3, y + cell_size / 2);
     }
+    //name of matrix
+    {
+      x = border + cell_size;
+      y = border;
+      var text = name + "[i,j]=";
+      var width = contextGrid.measureText(text).width / 2;
+      contextGrid.fillText(text, x + (cell_size / 2) - width, y + (cell_size / 2) + font_size / 4.0);
+    }
+
     //indecies for i ->
-    for (var i = 0; i < L.length - 1; i++) {
-      x = border + (cell_size * (L.length - 1));
-      y = border + cell_size * (i + 2);
+    for (var i = 0; i < matrix.length - 1; i++) {
+      x = border + (cell_size * (matrix.length - 1));
+      y = border + cell_size * (i + 3);
 
       contextGrid.fillStyle = "#000000";
       contextGrid.font = "bold " + font_size + "px Consolas";
@@ -213,8 +266,8 @@ function MinimumWeightTriangulation() {
     }
     //text for i ->
     {
-      x = border + cell_size * L.length;
-      y = border + cell_size * 2;
+      x = border + cell_size * matrix.length;
+      y = border + cell_size * 3;
       var text = "i";
       var width = contextGrid.measureText(text).width / 2;
       contextGrid.fillText(text, x + (cell_size / 2) - width, y + (cell_size / 2) + font_size / 4.0);
@@ -222,7 +275,7 @@ function MinimumWeightTriangulation() {
     }
 
   }
-  
+
   this.arrow = function (fromx, fromy, tox, toy) { 
     var headlen = 10;   // length of head in pixels
     var angle = Math.atan2(toy - fromy, tox - fromx);
@@ -237,6 +290,9 @@ function MinimumWeightTriangulation() {
 
 
   this.write = function (lines) {
+    if (retracking)
+      return;
+
     var border = dotted_thickness / 2 + min_object_distance;
     var x = border;
     var y = canvas.height - ((lines.length + 1) * 30);  //30px as line height, +1 for padding
@@ -245,7 +301,7 @@ function MinimumWeightTriangulation() {
     contextGrid.font = "bold " + font_size + "px TimesNewRoman";
     contextGrid.globalCompositeOperation = "source-over";
     for (var i = 0; i < lines.length; i++) {
-      contextGrid.fillText(lines[i].replace(/NaN/g, "\u221E"), x, y + 15 + font_size / 4.0)
+      contextGrid.fillText(lines[i].replace(/NaN/g, "\u221E"), x, y + 15 + font_size / 4.0);
       y += 30;
     }
   }
@@ -317,6 +373,10 @@ function MinimumWeightTriangulation() {
   }
 
   this.redrawCanvas = function () {
+
+    if (retracking)
+      return;
+
     context.clearRect(0, 0, canvas.width, canvas.height);
     this.drawCanvasBoundingBox();
 
@@ -338,7 +398,7 @@ function MinimumWeightTriangulation() {
       if (l != 0) {
         //current polygon from i to j
         context.beginPath();
-        context.fillStyle = "rgba(0,0,128,0.10)";
+        context.fillStyle = polygon_color;
         context.moveTo(allPoints[I].x, allPoints[I].y);
         for (var i = 1; i <= l; i++)
           context.lineTo(allPoints[I + i].x, allPoints[I + i].y);
@@ -347,14 +407,14 @@ function MinimumWeightTriangulation() {
 
         //current triangle with i, j, k
         context.beginPath();
-        context.fillStyle = "rgba(0,128,0,0.25)";
+        context.fillStyle = triangle_color;
         context.moveTo(allPoints[I].x, allPoints[I].y);
         context.lineTo(allPoints[K].x, allPoints[K].y);
         context.lineTo(allPoints[I + l].x, allPoints[I + l].y);
         context.fill();
 
       }
-      this.drawGrids();
+      this.drawGridsL();
     }
     else {
       //this.drawTriangle(0, allPoints.length - 1);
@@ -383,8 +443,8 @@ function MinimumWeightTriangulation() {
         }
       }
 
-      contextGrid.clearRect(0, 0, canvasGrid.width, canvasGrid.height);
-      this.writeTop(s_text);
+      this.drawGridsS();
+      this.write(s_text);
     }
 
   }
@@ -590,7 +650,8 @@ function MinimumWeightTriangulation() {
       return;
     var destindex = stepCount - 1;
     this.reset();
-    while(stepCount != destindex) {
+    while (stepCount != destindex) {
+      retracking = stepCount < destindex - 1;
       this.stepForward();
     }
   }
@@ -601,7 +662,7 @@ function MinimumWeightTriangulation() {
   	  x: (evt.clientX - rect.left) / (rect.right - rect.left) * canvas.width + 12,
   	  y: (evt.clientY - rect.top) / (rect.bottom - rect.top) * canvas.height + 12
   	};
-  	var point = minimumweighttriangulation.Point(pos.x, pos.y)
+    var point = minimumweighttriangulation.Point(pos.x, pos.y);
 
   	//check if click is outside the min object distance from every other dot and the border
   	//border first:
@@ -734,15 +795,15 @@ function MinimumWeightTriangulation() {
       //  from:    min_object_distance
       //  to:      canvas.width - min_object_distance
       //provided the default values didn't change, that's 20 - 480
-      // we map that to 0 - 100
+      // we map that to 0 - 10
 
       //k = delta_y / delta_x
-      var k = 100 / ((canvas.width - min_object_distance) - min_object_distance);
+      var k = 10 / ((canvas.width - min_object_distance) - min_object_distance);
       //y(20) = 0 -> 20*k + d = 0 -> d = -20*k;
       var d = -min_object_distance * k;
 
       return input * k + d;
-    }
+    };
 
     var p1x = scale(p1.x);
     var p2x = scale(p2.x);

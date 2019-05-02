@@ -430,9 +430,9 @@ function LS_Method4() {
     }
 
     for (var i = 0; i < n; i++) {
-      if(i == I)
+      if(i === I)
         this.grid_Ak[i].c = this.curser;
-      else if (i >= this.VON && i <= this.BIS)
+      else if (i >= von && i <= this.BIS)
         this.grid_Ak[i].c = this.added;
       else if (i >= von && i <= I)
         this.grid_Ak[i].c = this.selected;
@@ -441,7 +441,7 @@ function LS_Method4() {
     }
 
     I++;
-    this.FINISHED = I == n;
+    this.FINISHED = I === n;
   }
 }
 
@@ -471,29 +471,22 @@ function LargestSum() {
   var context;
   
   var speed = 5;
-
-  var direction_indicator_thickness = "3";
-  var direction_indicator_color = "#636363"
-  
+    
   var grid_thickness = "5";
   var grid_color = "#222222";
+  var grid_selected = "#DD2222";
   
-  var default_text_color = "#222222";
-  var potential_sequence_color = "#FF8A00";
-  var current_selection_color = "#B22222"
-  var current_comparator_color = "#FFD700"
-  var sequence_color = "#0C9817"
-  var finding_sequence_path_color = "#0C9817"
   
   //global algorithm variables
   var A = [];
+  var K = [];
 
   this.initialize = function() {
-    var content_div = document.getElementById("content")
-    var info_div = document.getElementById("info")
-    var algo_div = document.getElementById("algo")
+    var content_div = document.getElementById("content");
+    var info_div = document.getElementById("info");
+    var algo_div = document.getElementById("algo");
 
-    canvas = document.createElement("canvas")
+    canvas = document.createElement("canvas");
     canvas.setAttribute("id", "canvas");
     canvas.setAttribute("class", "unselectable");
     context = canvas.getContext("2d");
@@ -502,7 +495,7 @@ function LargestSum() {
     var width = cell_size * max_count + header_diff + 2 * grid_border;
 
     //content_div.style.width=width + 'px';
-    info_div.style.width=(width+10) + 'px';
+    info_div.style.width = (width + 10) + 'px';
     algo_div.style.width = (width + 10) + 'px';
 
     for (var i = 0; i < algo_count; i++) {
@@ -539,12 +532,12 @@ function LargestSum() {
     var valid =
       (keycode >= 8 && keycode <= 46) ||     //control keys
       (charCode >= 48 && charCode <= 57) ||  //numbers
-      charCode == 44 ||                     // ,
-      charCode == 45;                       // -
+      charCode === 44 ||                     // ,
+      charCode === 45;                       // -
 
     if (!valid)
       event.preventDefault();
-    else if (keycode == 13)
+    else if (keycode === 13)
       this.onBlur(document.getElementById("avals"));
   }
 
@@ -579,7 +572,7 @@ function LargestSum() {
   }
     
   this.onBlur = function(textbox) {
-    this.validateAndUpdate(textbox)
+    this.validateAndUpdate(textbox);
     this.reset();
   }
   this.reset = function () {
@@ -608,7 +601,7 @@ function LargestSum() {
     for(i = 0; i < length; i++)
       A[i] = Math.floor(Math.random() * (max_value * 2)) - max_value;
 
-    var textbox = document.getElementById("avals").value = A.toString();
+    document.getElementById("avals").value = A.toString();
     this.calculateCells();
     this.drawCellsAll();
     this.clear();
@@ -621,6 +614,7 @@ function LargestSum() {
     var y_off = grid_border;
 
     var grid_Ak = [];
+    K = [];
 
     //for all entries...
     for (i = 0; i < A.length; i++) {
@@ -628,6 +622,10 @@ function LargestSum() {
         x_off + (i * cell_size),    //x offset = left-offset of the grid + (current index * cell size)
         y_off,                      //y offset = const top-offset of the grid + cell size (that is to say, one grid row lower)
         A[i]);                      //value    = current value in A.
+      K[i] = this.CellValue(
+        x_off + (i * cell_size),
+        y_off + (4 * cell_size),
+        i + 1);
     }
 
 
@@ -637,7 +635,7 @@ function LargestSum() {
     }
 
     canvas.width = grid_border * 2 + A.length * cell_size + header_diff;
-    canvas.height = cell_size * 5;
+    canvas.height = cell_size * 6;
   }
 
   this.drawCellsAll = function () {
@@ -645,7 +643,20 @@ function LargestSum() {
       var algo = this.getAlgo(i);
       this.drawCells(algo.grid_Ak, algo.name);
     }
+    this.drawCells(K, "k      ");
     this.updateText();
+    for (i = 0; i < algo_count; i++) {
+      algo = this.getAlgo(i);
+      if (algo.VON < 0)
+        continue;
+
+      context.beginPath();
+      context.strokeStyle = grid_selected;
+      context.lineWidth = 3;
+      var width = algo.grid_Ak[algo.BIS].x - algo.grid_Ak[algo.VON].x + cell_size;
+      context.rect(algo.grid_Ak[algo.VON].x, algo.grid_Ak[algo.VON].y, width, cell_size);
+      context.stroke();
+    }
   }
 
   // draws an array of cells with a name in the header column.
@@ -653,7 +664,7 @@ function LargestSum() {
 
     context.clearRect(0, cells[0].y, canvas.width, cell_size);
 
-    context.font = "bold " + font_size + "px Consolas"
+    context.font = "bold " + font_size + "px Consolas";
     context.globalCompositeOperation = "source-over";
 
     for (i = 0; i < A.length; i++) {

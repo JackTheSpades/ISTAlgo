@@ -37,11 +37,11 @@ function RandomSearchTree() {
   var ISPAUSED = true;
     
   this.initialize = function() {
-    var content_div = document.getElementById("content")
-    var info_div = document.getElementById("info")
-    var algo_div = document.getElementById("algo")
+    var content_div = document.getElementById("content");
+    var info_div = document.getElementById("info");
+    var algo_div = document.getElementById("algo");
 
-    canvas = document.createElement("canvas")
+    canvas = document.createElement("canvas");
     canvas.setAttribute("id", "canvas");
     canvas.setAttribute("class", "unselectable");
     context = canvas.getContext("2d");
@@ -57,8 +57,8 @@ function RandomSearchTree() {
 
     return;
 
-    canvas.width = 1000;
-    canvas.height = 500;
+    //canvas.width = 1000;
+    //canvas.height = 500;
 
     /*
     //Test Tree
@@ -120,7 +120,7 @@ function RandomSearchTree() {
       };
     */
 
-    this.drawTree();
+    //this.drawTree();
 
   }
   
@@ -184,15 +184,15 @@ function RandomSearchTree() {
   }
 
   this.genExample = function () {
-    X = []; 
+    X = [];
 
     // random value inbetween 5 and max_count for the length of the input array.
-    var length = Math.floor(Math.random() * (max_count - 5)) + 5; 
+    var length = Math.floor(Math.random() * (max_count - 5)) + 5;
 
     // we fill X with numbers 1,2,3,... length-1 and shuffle them
     // thus creating an example that will be easier to follow then multiple same numbers.
     var arr = [];
-    for (i = 0; i < length; i++)
+    for (var i = 0; i < length; i++)
       arr[i] = i + 1;
     for (i = 0; i < length; i++) {
       var index = Math.floor(Math.random() * arr.length);
@@ -200,17 +200,53 @@ function RandomSearchTree() {
       arr.splice(index, 1);
     }
 
-    var textbox = document.getElementById("avals").value = X.toString();
+    document.getElementById("avals").value = X.toString();
     this.clear();
     this.calculateCells();
+    this.drawCells();
+  };
+
+  this.clearPrior = function () {
+    this.clear();
+    this.calculateCells();
+    this.drawCells();
+  };
+
+  this.shuffle = function () {
+    this.clear();
+    
+    var PX_Old = PX;
+    var X_Old = X;
+
+    var length = X.length;
+    X = [];
+    PX = [];
+    
+    var indices = [];
+    for (var i = 0; i < length; i++)
+      indices[i] = i;
+       
+    for (i = 0; i < length; i++) {
+
+      var sub_index = Math.floor(Math.random() * indices.length);
+      var main_index = indices[sub_index];
+      indices.splice(sub_index, 1);
+
+      X[i] = X_Old[main_index];
+      PX[i] = PX_Old[main_index];
+    }
+
+    document.getElementById("avals").value = X.toString();
+    canvas.height = grid_border * 2 + cell_size * (X.length + 1);
+    canvas.width = 800;
     this.drawCells();
   }
 
   this.calculateCells = function () {
 
     PX = [];
-    P_VisibleQueue = [];
-    P_VisibleQueue[0] = new Array(X.length).fill(0);
+    //P_VisibleQueue = [];
+    //P_VisibleQueue = new Array(X.length).fill(0);
     for (var i = 0; i < X.length; i++) {
       PX[i] = [];
     }
@@ -225,7 +261,7 @@ function RandomSearchTree() {
 
     //clear right side of canvas for table.
     context.clearRect(canvas.width - header_diff, 0, header_diff, canvas.height);
-    context.font = "bold " + font_size + "px Consolas"
+    context.font = "bold " + font_size + "px Consolas";
     context.globalCompositeOperation = "source-over";
 
     //top left corner of the grid
@@ -254,7 +290,6 @@ function RandomSearchTree() {
     context.fillText("p(x)", x_off + (cell_size + (px_cell_width / 2)) - (str_width / 2), y_off + (cell_size / 2) + font_size / 4.0);
 
     y_off += cell_size;
-    var P_VisibleCur = P_VisibleQueue[STEP];
 
     //draw actual content for x and p(x)
     for (var i = 0; i < X.length; i++) {
@@ -270,7 +305,7 @@ function RandomSearchTree() {
       context.fillText(X[i], x_off + (cell_size / 2) - (str_width / 2), y_off + (cell_size / 2) + font_size / 4.0);
 
       var px_text = new Array(max_bit_count).fill("_");
-      for (var j = 0; j < P_VisibleCur[i] && j < max_bit_count; j++)
+      for (var j = 0; j < PX[i].length && j < max_bit_count; j++)
         px_text[j] = PX[i][j];
       var litteral = px_text.join('');
 
@@ -295,7 +330,7 @@ function RandomSearchTree() {
     //delete grid-row across entire width of canvas for the cells.
     context.clearRect(0, 0, canvas.width - header_diff, canvas.height);
 
-    context.font = "bold " + font_size + "px Consolas"
+    context.font = "bold " + font_size + "px Consolas";
     context.globalCompositeOperation = "source-over";
 
     var curLevel = [Tree];      //The horizontal level (line) for the currently drawn tree.
@@ -385,7 +420,34 @@ function RandomSearchTree() {
     this.drawNode(node.l);
     this.drawNode(node.r);
   }
-  
+
+  this.write = function (lines) {
+
+    var x = 5;
+    var y = 5;
+
+    context.fillStyle = "#000000";
+    context.font = "bold " + font_size + "px TimesNewRoman";
+    context.globalCompositeOperation = "source-over";
+
+    for (var i = 0; i < lines.length; i++) {
+      context.fillText(lines[i], x, y + 15 + font_size / 4.0);
+      y += 30;
+    }
+  }
+
+  this.arrow = function (fromx, fromy, tox, toy) {
+    var headlen = 10;   // length of head in pixels
+    var angle = Math.atan2(toy - fromy, tox - fromx);
+    context.beginPath();
+    context.moveTo(fromx, fromy);
+    context.lineTo(tox, toy);
+    context.lineTo(tox - headlen * Math.cos(angle - Math.PI / 6), toy - headlen * Math.sin(angle - Math.PI / 6));
+    context.moveTo(tox, toy);
+    context.lineTo(tox - headlen * Math.cos(angle + Math.PI / 6), toy - headlen * Math.sin(angle + Math.PI / 6));
+    context.stroke();
+  }
+
   // returns a tree node object
   //  c: color
   //  i: index
@@ -469,11 +531,11 @@ function RandomSearchTree() {
       //set bits of priority if they haven't been calculated yet.
       if (PX[node.i].length == i) {
         PX[node.i].push(Math.round(Math.random()).toString());     // if priority on bit-index is '_', set it to random '1' or '0'
-        P_VisibleQueue[STEP][node.i]++;
+        //P_VisibleQueue[node.i]++;
       }
       if (PX[node.p.i].length == i) {
         PX[node.p.i].push(Math.round(Math.random()).toString());   // same for parent node.
-        P_VisibleQueue[STEP][node.p.i]++;
+        //P_VisibleQueue[node.p.i]++;
       }
 
       //compare: if prio(parent) is bigger than prio(node), return true, otherwise false
@@ -513,19 +575,26 @@ function RandomSearchTree() {
   //variable to check if in the next step we want to add a new node, or still sort the last one
   var add = true;
   var last_node = null;
+  var last_compare_node = null;
 
   this.stepForward = function () {
 
     if (FINISHED)
       return;
 
+    var text = [];
 
     if (add) {
       var node = this.nodeValue(X[I], I);
 
-      if (Tree == null)
+      if (Tree == null) {
         Tree = node;
-      else {
+        last_compare_node = node;
+      } else {
+
+        //if()
+
+
         this.insert(Tree, node);
       }
       last_node = node;
@@ -589,20 +658,23 @@ function RandomSearchTree() {
     }
 
     STEP++;
-    if (P_VisibleQueue.length == STEP)
-      P_VisibleQueue[STEP] = P_VisibleQueue[STEP - 1].slice();
 
     // after adding or moving the node up by one,
     // we check the tree to see if it is now in proper priority order.
     // ... it not, we need to keep on 'sorting' (indicated by add==false).
+    var old_add = add;
     add = this.checkNode(last_node);
     if (add)
       last_node.c = "white";
     else
-      last_node.c = "lime";
+      last_node.c = "crimson";
 
     this.drawCells();
     this.drawTree();
+    if(old_add)
+      this.write(Array(`Inserting: ${X[I - 1]}`));
+    else
+      this.write(Array(`Priority Rotate: ${X[I - 1]}`));
     
     // if add is true (indicating that tree is sorted)
     // and the Index counter is the same as the array length, we are done.

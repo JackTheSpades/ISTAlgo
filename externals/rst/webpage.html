@@ -259,7 +259,9 @@
         <table id="input" class="unselectable">
           <tr>
             <td align="right">Run Speed: </td>
-            <td colspan = 2><input id="speed" type="range" min="0" max="10" step="1" oninput="randomSearchTree.updateSpeed(this.value)" onchange="randomSearchTree.updateSpeed(this.value)"/></td>
+            <td colspan = 2>
+              <input id="speed" type="range" min="0" max="10" step="1" oninput="randomSearchTree.updateSpeed(this.value)" onchange="randomSearchTree.updateSpeed(this.value)"/>
+            </td>
           </tr>
           <tr>
             <td align="right">A[k] = </td>
@@ -268,7 +270,11 @@
                 onkeypress="randomSearchTree.restrictKeyPress(event)"
                 onblur="randomSearchTree.onBlur(this)">
             </td>
-            <td><input style="white-space: normal;" class="wide_control" type="button" onclick="randomSearchTree.genExample()" value="Random"></td>
+            <td>
+                <input style="white-space: normal;" class="wide_control" type="button" onclick="randomSearchTree.genExample()" value="Random Input">
+                <input style="white-space: normal;" class="wide_control" type="button" onclick="randomSearchTree.clearPrior()" value="Clear Priority">
+                <input style="white-space: normal;" class="wide_control" type="button" onclick="randomSearchTree.shuffle()" value="Shuffle Input">
+            </td>
           </tr>
         </table>
         <div id="content" class="unselectable">

@@ -305,15 +305,21 @@ function Scanline() {
       var strlen = context.measureText(s).width + grid_border;
       context.fillText(s, x_from - strlen, y + font_size / 4.0)
     }
+    
+    
+    var yFunc = function(index) {
+       var _t = T;
+       if(index != K)
+          _t = SUM_QUEUE[index].t;
+       return y_top + (diagram_height - (diagram_ratio * _t));
+    }
+    
 
     //draw points and connection lines.
     var x_prev = -1, y_prev = -1;
     for (var i = 1; i <= K; i++) {
 
-      var t = T
-      if (i != K)
-        t = SUM_QUEUE[i].t;
-      var y = y_top + (diagram_height - (diagram_ratio * t));
+      var y = yFunc(i);
       var x = grid_k[i - 1].x + (cell_size / 2);
 
       context.beginPath();
@@ -332,20 +338,51 @@ function Scanline() {
       x_prev = x;
       y_prev = y;
     }
+    
 
-    if (VON != BIS) {
+    //fill sum region under curve.
+    if (VON <= BIS && K > 1) {
       context.beginPath();
       context.fillStyle = "rgba(0,128,0,0.5)";
-      context.moveTo(grid_k[VON - 1].x + (cell_size / 2), y_top + diagram_height);
+      
+      if(VON == 1)
+         context.moveTo(grid_k[VON - 1].x + (cell_size / 2), y_top + diagram_height);
+      else {
+         //if we aren't at the very first point, the filled out area is to go half to the left.
+         //  so we interpolate the coordinates for that half bit.         
+         context.moveTo(grid_k[VON - 1].x, y_top + diagram_height);
+         
+         var dx = cell_size;
+         var dy = yFunc(VON) - yFunc(VON - 1);
+         var k = dy / dx;
+         var d = yFunc(VON) - (k * (grid_k[VON - 1].x + (cell_size / 2)));
+         context.lineTo(grid_k[VON - 1].x, k * grid_k[VON - 1].x + d);         
+      }
+      
+      
+      
       for (var i = VON; i <= BIS; i++) {
-        var t = T;
-        if (i != K)
-          t = SUM_QUEUE[i].t;
-        var y = y_top + (diagram_height - (diagram_ratio * t));
+        var y = yFunc(i);
         var x = grid_k[i - 1].x + (cell_size / 2);
         context.lineTo(x, y);
       }
-      context.lineTo(grid_k[BIS - 1].x + (cell_size / 2), y_top + diagram_height);
+      
+      
+      if(BIS >= K)      
+         context.lineTo(grid_k[BIS - 1].x + (cell_size / 2), y_top + diagram_height);
+      else {
+         //if we aren't at the very last (ongoing) point, the filled out area is to go half to the right.
+         //  so we interpolate the coordinates for that half bit.
+         
+         var dx = cell_size;
+         var dy = yFunc(BIS + 1) - yFunc(BIS);
+         var k = dy / dx;
+         var d = yFunc(BIS + 1) - (k * (grid_k[BIS].x + (cell_size / 2)));
+         context.lineTo(grid_k[BIS].x, k * grid_k[BIS].x + d);            
+         
+         context.lineTo(grid_k[BIS].x, y_top + diagram_height);
+      }     
+      
       context.closePath();
       context.fill();
     }
