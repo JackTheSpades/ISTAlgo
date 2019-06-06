@@ -427,12 +427,12 @@ function RandomSearchTree() {
     var y = 5;
 
     context.fillStyle = "#000000";
-    context.font = "bold " + font_size + "px TimesNewRoman";
+    context.font = "bold 18px TimesNewRoman";
     context.globalCompositeOperation = "source-over";
 
     for (var i = 0; i < lines.length; i++) {
       context.fillText(lines[i], x, y + 15 + font_size / 4.0);
-      y += 30;
+      y += 18;
     }
   }
 
@@ -570,35 +570,131 @@ function RandomSearchTree() {
   this.pauseAlgorithm = function () {
     ISPAUSED = true;
   }
-  
+
+
+
+  this.animationInterval = null;
+  this.animationContext = null;
+
+  this.moveNode = function () {
+    randomSearchTree.animationContext.counter++;
+    if (randomSearchTree.animationContext.counter === 100)
+      randomSearchTree.stepForward();
+    else {
+      randomSearchTree.drawCells();
+      randomSearchTree.drawTree();
+
+      randomSearchTree.animationContext.node.x += randomSearchTree.animationContext.dx;
+      randomSearchTree.animationContext.node.y += randomSearchTree.animationContext.dy;
+
+      randomSearchTree.drawNode(randomSearchTree.animationContext.node);
+    }
+  }  
+
+
 
   //variable to check if in the next step we want to add a new node, or still sort the last one
   var add = true;
   var last_node = null;
-  var last_compare_node = null;
+  var compare_node = null;
+  var insert_done = false;
+
 
   this.stepForward = function () {
+
+    if (this.animationInterval !== null) {
+      clearInterval(this.animationInterval);
+      this.animationInterval = null;
+      this.animationContext = null;
+    }
+
+    if (this.animationContext !== null) {
+      this.animationInterval = setInterval(this.moveNode, 10);
+      return;
+    }
 
     if (FINISHED)
       return;
 
+
+
     var text = [];
+    var next_compare_node = null;
+    var left = false;
 
     if (add) {
       var node = this.nodeValue(X[I], I);
 
-      if (Tree == null) {
+      if (Tree === null) {
         Tree = node;
-        last_compare_node = node;
+        insert_done = true;
+        text.push(`Inserted Root: ${X[I]}`);
       } else {
 
-        //if()
+        if (compare_node === null) {
+          this.insert(Tree, node);
+          text.push(`Inserted: ${X[I]}`);
+          insert_done = true;
+        } else {
+
+          text.push(`Inserting: ${X[I]}`);
+          text.push(`Compare with: ${compare_node.v}`);
+          if (compare_node.v <= node.v) {
+            text.push(`Value greater-equal. Going right.`);
+            next_compare_node = compare_node.r;
+            left = false;
+          } else {
+            text.push(`Value less. Going left.`);
+            next_compare_node = compare_node.l;
+            left = true;
+          }
+
+          node.x = compare_node.x + radius * 2;
+          node.y = compare_node.y;
+          node.c = "rgba(0,0,128,0.25)";
+
+          if (next_compare_node !== null && ISPAUSED === true) {
+            this.animationContext = {
+              node: node,
+              counter: 0,
+              dx: (next_compare_node.x - compare_node.x) / 100,
+              dy: (next_compare_node.y - compare_node.y) / 100,
+            };
+          }
+          else if (next_compare_node === null && ISPAUSED === true) {
+
+            var pow = 0;
+            var tmp = compare_node.p;
+            while (tmp !== null) {
+              pow++;
+              tmp = tmp.p;
+            }
+
+            var node_count_on_level = Math.pow(2, pow);
+            var node_distance_x = (canvas.width - header_diff) / (node_count_on_level + 1);
+            var index = Math.round((compare_node.x / node_distance_x) - 1) * 2;
+            node_count_on_level *= 2;
+            node_distance_x = (canvas.width - header_diff) / (node_count_on_level + 1);
+
+            var x = node_distance_x * (index + (left ? 1 : 2));
+
+            this.animationContext = {
+              node: node,
+              counter: 0,
+              dx: (x - compare_node.x - 2 * radius) / 100,
+              dy: (radius * 2 + 10) / 100,
+            };
+
+          }
+        }
 
 
-        this.insert(Tree, node);
       }
-      last_node = node;
-      I++;
+
+      if (insert_done) {
+        last_node = node;
+        I++;
+      }
     }
 
     // if not in add mode, we need to move the last_node up until the tree is OK
@@ -661,25 +757,39 @@ function RandomSearchTree() {
 
     // after adding or moving the node up by one,
     // we check the tree to see if it is now in proper priority order.
-    // ... it not, we need to keep on 'sorting' (indicated by add==false).
-    var old_add = add;
+    // ... it not, we need to keep on 'sorting' (indicated by add==false). 
     add = this.checkNode(last_node);
-    if (add)
-      last_node.c = "white";
-    else
+    if (add) {
+      if (insert_done) {
+        last_node.c = "lime";
+        insert_done = false;
+        text.push(`Priority Less. Node stays.`);
+        next_compare_node = Tree;
+      } else
+        last_node.c = "white";
+    }
+    else {
       last_node.c = "crimson";
+      text.push(`Priority More. Rotate up.`);
+    }
 
     this.drawCells();
     this.drawTree();
-    if(old_add)
-      this.write(Array(`Inserting: ${X[I - 1]}`));
-    else
-      this.write(Array(`Priority Rotate: ${X[I - 1]}`));
+
+    //-------------------------------------
     
+    this.drawNode(node);
+
+    //-------------------------------------
+
+    this.write(text);
+
+    compare_node = next_compare_node;
+
     // if add is true (indicating that tree is sorted)
     // and the Index counter is the same as the array length, we are done.
     if (add)
-      FINISHED = I == X.length;
+      FINISHED = I === X.length;
   }
 
   this.stepBackward = function () {

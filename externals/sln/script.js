@@ -121,10 +121,11 @@ function Scanline() {
 
     if (warn)
       window.alert("Some elements were cropped to be within -" + max_value + " and " + max_value + " and the total of " + max_count + " elements.");
+      textbox.value = A.toString();
   }
     
   this.onBlur = function(textbox) {
-    this.validateAndUpdate(textbox)
+    this.validateAndUpdate(textbox);
     this.calculateCells();
     this.drawCellsAll();
     this.clear();

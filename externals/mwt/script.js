@@ -32,6 +32,8 @@ function MinimumWeightTriangulation() {
     
   var triangle_color = "rgba(0,128,0,0.25)";
   var polygon_color = "rgba(0,0,128,0.25)";
+  var polygon_color2 = "rgba(128,0,0,0.25)";
+  var dash_line_color = "rgba(100, 100, 0, 0.5)";
   
   var dotted_thickness = "2";
   var dot_circle_thickness = "2";
@@ -167,8 +169,10 @@ function MinimumWeightTriangulation() {
       if (l !== 0 && I === i && j === (I + l)) {
         return triangle_color;
       }
-      if (l !== 0 && (i === I && j === K) || (i === K && j === (I + l))) {
+      if (l !== 0 && (i === I && j === K))
         return polygon_color;
+      if (i === K && j === (I + l)) {
+        return polygon_color2;
       }
       return false;
     };
@@ -397,12 +401,26 @@ function MinimumWeightTriangulation() {
     if (!FINISHED_PHASE1) {
       if (l != 0) {
         //current polygon from i to j
-        context.beginPath();
-        context.fillStyle = polygon_color;
-        context.moveTo(allPoints[I].x, allPoints[I].y);
-        for (var i = 1; i <= l; i++)
-          context.lineTo(allPoints[I + i].x, allPoints[I + i].y);
-        context.fill();
+
+        //part 1 from i to k
+        if (K - I >= 2) {
+          context.beginPath();
+          context.fillStyle = polygon_color;
+          context.moveTo(allPoints[I].x, allPoints[I].y);
+          for (var i = I + 1; i <= K; i++)
+            context.lineTo(allPoints[i].x, allPoints[i].y);
+          context.fill();
+        }
+
+        //part 2 from k to j
+        if (I + l - K >= 2) {
+          context.beginPath();
+          context.fillStyle = polygon_color2;
+          context.moveTo(allPoints[K].x, allPoints[K].y);
+          for (var i = K + 1; i <= (I + l); i++)
+            context.lineTo(allPoints[i].x, allPoints[i].y);
+          context.fill();
+        }
 
 
         //current triangle with i, j, k
@@ -430,7 +448,7 @@ function MinimumWeightTriangulation() {
           s_text.push(`S[${a + 1}, ${b + 1}] = ${c + 1}`);
 
           context.lineWidth = dot_circle_thickness;
-          context.strokeStyle = dot_circle_color;
+          context.strokeStyle = dash_line_color;
           context.setLineDash([10, 10]);
           context.beginPath();
           context.moveTo(allPoints[a].x, allPoints[a].y);
