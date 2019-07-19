@@ -324,6 +324,52 @@ function RandomSearchTree() {
 
   }
 
+  this.calculateTreeNodeLocations = function() {
+    
+    var curLevel = [Tree];      //The horizontal level (line) for the currently drawn tree.
+                                // an array containing the nodes that are placed on said level in order.
+                                // or null if there is no node.
+    var dont_continue = false;
+    var y = 50;                 // y distance from the top of canvas. 
+
+    while (!dont_continue) {
+      
+      var node_count_on_level = curLevel.length;
+      var node_distance_x = (canvas.width - header_diff) / (node_count_on_level + 1);
+
+      for (var i = 0; i < node_count_on_level; i++) {
+        if (curLevel[i] == null)
+          continue;
+
+        var x = node_distance_x * (i + 1);
+        curLevel[i].dx = x;
+        curLevel[i].dy = y;
+      }
+
+      // build the curLevel array with all the nodes or 'null' necessary
+      // if there are no further nodes (all null) we end the loop.
+
+      dont_continue = true;
+      var tmpLevel = [];
+
+      for (var i = 0; i < curLevel.length; i++) {   //go over all nodes on the current level
+        var node = curLevel[i];
+        if (node == null) {         // if, on current level, one node is null (not present)
+          tmpLevel.push(null);      // we push two child nodes as null.
+          tmpLevel.push(null);      // this is done for spacing, otherwise the real child nodes are gonne be misplaced.
+        }
+        else {
+          tmpLevel.push(node.l);
+          tmpLevel.push(node.r);
+          dont_continue = false;
+        }
+      }
+      curLevel = tmpLevel;
+
+      y += radius * 2 + 10;
+    }
+  };
+
   // recalculates the position of every node on the canvas and then draws the entire tree
   this.drawTree = function() {
 
@@ -457,6 +503,8 @@ function RandomSearchTree() {
   //  p: parent
   //  x: x-position of node (will be written and updated later)
   //  y: y-position of node (will be written and updated later)
+  //  dx: delta x for next x-position
+  //  dy: delta y for next y-position
   this.nodeValue = function(value, index) {
     var newNodeValue = {
       c: "white",
@@ -467,6 +515,8 @@ function RandomSearchTree() {
       y: 0,
       l: null,
       r: null,
+      dx: 0,
+      dy: 0,
     };
     return newNodeValue;
   }
@@ -582,10 +632,12 @@ function RandomSearchTree() {
       randomSearchTree.stepForward();
     else {
       randomSearchTree.drawCells();
-      randomSearchTree.drawTree();
 
-      randomSearchTree.animationContext.node.x += randomSearchTree.animationContext.dx;
-      randomSearchTree.animationContext.node.y += randomSearchTree.animationContext.dy;
+      if(randomSearchTree.animationContext.drawTree)
+        randomSearchTree.drawTree();
+
+      randomSearchTree.animationContext.node.x += randomSearchTree.animationContext.node.dx;
+      randomSearchTree.animationContext.node.y += randomSearchTree.animationContext.node.dy;
 
       randomSearchTree.drawNode(randomSearchTree.animationContext.node);
     }
@@ -678,9 +730,12 @@ function RandomSearchTree() {
 
             var x = node_distance_x * (index + (left ? 1 : 2));
 
+            node.dx = 
+
             this.animationContext = {
               node: node,
               counter: 0,
+              drawTree: true,
               dx: (x - compare_node.x - 2 * radius) / 100,
               dy: (radius * 2 + 10) / 100,
             };
@@ -702,7 +757,7 @@ function RandomSearchTree() {
 
       //when rotating the node upwards, we may have to adjust up to 6 nodes:
       //grandparent, parent, self, sibling, left_child and right_child.
-
+ 
       /*        g
               /   \
              -     p
@@ -774,6 +829,13 @@ function RandomSearchTree() {
     }
 
     this.drawCells();
+
+    this.calculateTreeNodeLocations();
+    this.animationContext = {
+      node: Tree,
+      counter: 0,
+    };
+
     this.drawTree();
 
     //-------------------------------------
