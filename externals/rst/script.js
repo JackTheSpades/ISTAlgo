@@ -324,6 +324,54 @@ function RandomSearchTree() {
 
   }
 
+  this.calculateTreeNodeDeltaLocations = function() {
+    
+    var curLevel = [Tree];      //The horizontal level (line) for the currently drawn tree.
+                                // an array containing the nodes that are placed on said level in order.
+                                // or null if there is no node.
+    var dont_continue = false;
+    var y = 50;                 // y distance from the top of canvas. 
+    var level = 0;
+
+    while (!dont_continue) {
+      level++;
+      
+      var node_count_on_level = curLevel.length;
+      var fraction = Math.pow(2, level - 1);
+      var node_distance_x = (canvas.width - header_diff) / fraction;
+
+      for (var i = 0; i < node_count_on_level; i++) {
+        if (curLevel[i] == null)
+          continue;
+
+        var x = node_distance_x / 2 + node_distance_x * i;
+        curLevel[i].dx = (x - curLevel[i].x) / 100;
+        curLevel[i].dy = (y - curLevel[i].y) / 100;
+      }
+
+      // build the curLevel array with all the nodes or 'null' necessary
+      // if there are no further nodes (all null) we end the loop.
+
+      dont_continue = true;
+      var tmpLevel = [];
+
+      for (var i = 0; i < curLevel.length; i++) {   //go over all nodes on the current level
+        var node = curLevel[i];
+        if (node == null) {         // if, on current level, one node is null (not present)
+          tmpLevel.push(null);      // we push two child nodes as null.
+          tmpLevel.push(null);      // this is done for spacing, otherwise the real child nodes are gonne be misplaced.
+        }
+        else {
+          tmpLevel.push(node.l);
+          tmpLevel.push(node.r);
+          dont_continue = false;
+        }
+      }
+      curLevel = tmpLevel;
+
+      y += radius * 2 + 10;
+    }
+  };
   this.calculateTreeNodeLocations = function() {
     
     var curLevel = [Tree];      //The horizontal level (line) for the currently drawn tree.
@@ -331,19 +379,22 @@ function RandomSearchTree() {
                                 // or null if there is no node.
     var dont_continue = false;
     var y = 50;                 // y distance from the top of canvas. 
+    var level = 0;
 
     while (!dont_continue) {
+      level++;
       
       var node_count_on_level = curLevel.length;
-      var node_distance_x = (canvas.width - header_diff) / (node_count_on_level + 1);
+      var fraction = Math.pow(2, level - 1);
+      var node_distance_x = (canvas.width - header_diff) / fraction;
 
       for (var i = 0; i < node_count_on_level; i++) {
         if (curLevel[i] == null)
           continue;
 
-        var x = node_distance_x * (i + 1);
-        curLevel[i].dx = x;
-        curLevel[i].dy = y;
+        var x = node_distance_x / 2 + node_distance_x * i;
+        curLevel[i].x = x;
+        curLevel[i].y = y;
       }
 
       // build the curLevel array with all the nodes or 'null' necessary
@@ -379,48 +430,7 @@ function RandomSearchTree() {
     context.font = "bold " + font_size + "px Consolas";
     context.globalCompositeOperation = "source-over";
 
-    var curLevel = [Tree];      //The horizontal level (line) for the currently drawn tree.
-                                // an array containing the nodes that are placed on said level in order.
-                                // or null if there is no node.
-    var dont_continue = false;
-    var y = 50;                 // y distance from the top of canvas. 
-
-    while (!dont_continue) {
-      
-      var node_count_on_level = curLevel.length;
-      var node_distance_x = (canvas.width - header_diff) / (node_count_on_level + 1);
-
-      for (var i = 0; i < node_count_on_level; i++) {
-        if (curLevel[i] == null)
-          continue;
-
-        var x = node_distance_x * (i + 1);
-        curLevel[i].x = x;
-        curLevel[i].y = y;
-      }
-
-      // build the curLevel array with all the nodes or 'null' necessary
-      // if there are no further nodes (all null) we end the loop.
-
-      dont_continue = true;
-      var tmpLevel = [];
-
-      for (var i = 0; i < curLevel.length; i++) {   //go over all nodes on the current level
-        var node = curLevel[i];
-        if (node == null) {         // if, on current level, one node is null (not present)
-          tmpLevel.push(null);      // we push two child nodes as null.
-          tmpLevel.push(null);      // this is done for spacing, otherwise the real child nodes are gonne be misplaced.
-        }
-        else {
-          tmpLevel.push(node.l);
-          tmpLevel.push(node.r);
-          dont_continue = false;
-        }
-      }
-      curLevel = tmpLevel;
-
-      y += radius * 2 + 10;
-    }
+    this.calculateTreeNodeLocations();
 
     this.drawNode(Tree);
   }
@@ -636,9 +646,16 @@ function RandomSearchTree() {
       if(randomSearchTree.animationContext.drawTree)
         randomSearchTree.drawTree();
 
-      randomSearchTree.animationContext.node.x += randomSearchTree.animationContext.node.dx;
-      randomSearchTree.animationContext.node.y += randomSearchTree.animationContext.node.dy;
+      var moveRec = function(node) {
+        if(node === null)
+          return;
+        node.x += node.dx;
+        node.y += node.dy;
+        moveRec(node.r);
+        moveRec(node.l);
+      };
 
+      moveRec(randomSearchTree.animationContext.node);
       randomSearchTree.drawNode(randomSearchTree.animationContext.node);
     }
   }  
@@ -687,6 +704,8 @@ function RandomSearchTree() {
           this.insert(Tree, node);
           text.push(`Inserted: ${X[I]}`);
           insert_done = true;
+
+          this.calculateTreeNodeLocations();
         } else {
 
           text.push(`Inserting: ${X[I]}`);
@@ -706,38 +725,37 @@ function RandomSearchTree() {
           node.c = "rgba(0,0,128,0.25)";
 
           if (next_compare_node !== null && ISPAUSED === true) {
+
+            node.dx = (next_compare_node.x - compare_node.x) / 100;
+            node.dy = (next_compare_node.y - compare_node.y) / 100;
             this.animationContext = {
+              drawTree: true,
               node: node,
               counter: 0,
-              dx: (next_compare_node.x - compare_node.x) / 100,
-              dy: (next_compare_node.y - compare_node.y) / 100,
             };
+
           }
           else if (next_compare_node === null && ISPAUSED === true) {
 
-            var pow = 0;
+            var level = 1;  //which level the new node is on.
             var tmp = compare_node.p;
             while (tmp !== null) {
-              pow++;
+              level++;
               tmp = tmp.p;
             }
 
-            var node_count_on_level = Math.pow(2, pow);
-            var node_distance_x = (canvas.width - header_diff) / (node_count_on_level + 1);
-            var index = Math.round((compare_node.x / node_distance_x) - 1) * 2;
-            node_count_on_level *= 2;
-            node_distance_x = (canvas.width - header_diff) / (node_count_on_level + 1);
+            var node_count_on_level = Math.pow(2, level + 1); //+2?
+            var node_distance_x = (canvas.width - header_diff) / node_count_on_level;
 
-            var x = node_distance_x * (index + (left ? 1 : 2));
-
-            node.dx = 
+            var x = compare_node.x + (node_distance_x * (left ? -1 : 1));
+ 
+            node.dx = (x - compare_node.x - 2 * radius) / 100,
+            node.dy = (radius * 2 + 10) / 100,
 
             this.animationContext = {
               node: node,
               counter: 0,
               drawTree: true,
-              dx: (x - compare_node.x - 2 * radius) / 100,
-              dy: (radius * 2 + 10) / 100,
             };
 
           }
@@ -830,11 +848,12 @@ function RandomSearchTree() {
 
     this.drawCells();
 
-    this.calculateTreeNodeLocations();
-    this.animationContext = {
-      node: Tree,
-      counter: 0,
-    };
+    // this.calculateTreeNodeLocations();
+    // this.animationContext = {
+    //   node: Tree,
+    //   counter: 0,
+    //   drawTree: false,
+    // };
 
     this.drawTree();
 
