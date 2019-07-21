@@ -345,6 +345,8 @@ function RandomSearchTree() {
           continue;
 
         var x = node_distance_x / 2 + node_distance_x * i;
+        curLevel[i].sx = curLevel[i].x;
+        curLevel[i].sy = curLevel[i].y;
         curLevel[i].dx = (x - curLevel[i].x) / 100;
         curLevel[i].dy = (y - curLevel[i].y) / 100;
       }
@@ -421,14 +423,18 @@ function RandomSearchTree() {
     }
   };
 
-  // recalculates the position of every node on the canvas and then draws the entire tree
-  this.drawTree = function() {
-
+  this.clearTree = function() {
     //delete grid-row across entire width of canvas for the cells.
     context.clearRect(0, 0, canvas.width - header_diff, canvas.height);
 
     context.font = "bold " + font_size + "px Consolas";
     context.globalCompositeOperation = "source-over";
+  }
+
+  // recalculates the position of every node on the canvas and then draws the entire tree
+  this.drawTree = function() {
+
+    this.clearTree();
 
     this.calculateTreeNodeLocations();
 
@@ -515,6 +521,8 @@ function RandomSearchTree() {
   //  y: y-position of node (will be written and updated later)
   //  dx: delta x for next x-position
   //  dy: delta y for next y-position
+  //  sx: start x
+  //  sy: start y
   this.nodeValue = function(value, index) {
     var newNodeValue = {
       c: "white",
@@ -527,6 +535,8 @@ function RandomSearchTree() {
       r: null,
       dx: 0,
       dy: 0,
+      sx: 0,
+      sy: 0,
     };
     return newNodeValue;
   }
@@ -645,12 +655,15 @@ function RandomSearchTree() {
 
       if(randomSearchTree.animationContext.drawTree)
         randomSearchTree.drawTree();
+      else
+        randomSearchTree.clearTree();
 
       var moveRec = function(node) {
         if(node === null)
           return;
-        node.x += node.dx;
-        node.y += node.dy;
+
+        node.x = node.sx + (node.dx * (randomSearchTree.animationContext.counter + 1))
+        node.y = node.sy + (node.dy * (randomSearchTree.animationContext.counter + 1))
         moveRec(node.r);
         moveRec(node.l);
       };
@@ -722,6 +735,8 @@ function RandomSearchTree() {
 
           node.x = compare_node.x + radius * 2;
           node.y = compare_node.y;
+          node.sx = node.x;
+          node.sy = node.y;
           node.c = "rgba(0,0,128,0.25)";
 
           if (next_compare_node !== null && ISPAUSED === true) {
@@ -770,8 +785,15 @@ function RandomSearchTree() {
       }
     }
 
+    // after adding or moving the node up by one,
+    // we check the tree to see if it is now in proper priority order.
+    // ... it not, we need to keep on 'sorting' (indicated by add==false). 
+    add = this.checkNode(last_node);
+
     // if not in add mode, we need to move the last_node up until the tree is OK
-    else {
+    if(!add && insert_done) {
+
+      this.drawTree();
 
       //when rotating the node upwards, we may have to adjust up to 6 nodes:
       //grandparent, parent, self, sibling, left_child and right_child.
@@ -824,14 +846,22 @@ function RandomSearchTree() {
 
       if (parent == Tree)
         Tree = last_node;
+
+      if(ISPAUSED === true) {
+        this.calculateTreeNodeDeltaLocations();
+        this.animationContext = {
+          node: Tree,
+          counter: 0,
+          drawTree: false,
+        };
+      }
+
+      var just_rotated = true;
+
     }
 
     STEP++;
 
-    // after adding or moving the node up by one,
-    // we check the tree to see if it is now in proper priority order.
-    // ... it not, we need to keep on 'sorting' (indicated by add==false). 
-    add = this.checkNode(last_node);
     if (add) {
       if (insert_done) {
         last_node.c = "lime";
@@ -848,17 +878,13 @@ function RandomSearchTree() {
 
     this.drawCells();
 
-    // this.calculateTreeNodeLocations();
-    // this.animationContext = {
-    //   node: Tree,
-    //   counter: 0,
-    //   drawTree: false,
-    // };
+    if(just_rotated !== true)
+      this.drawTree();
 
-    this.drawTree();
 
     //-------------------------------------
     
+    // draws the inserted node not yet in the tree (usually right next to another node)
     this.drawNode(node);
 
     //-------------------------------------
