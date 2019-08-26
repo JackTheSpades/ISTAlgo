@@ -158,7 +158,9 @@ function MinimumWeightTriangulation() {
       return false;
     };
     var numToText = function (num) {
-      return num + 1;
+      if (!isNaN(num))
+        return num + 1;
+      return "-";
     };
 
     this.drawGrids(S, highlight, numToText, "S");
@@ -672,6 +674,19 @@ function MinimumWeightTriangulation() {
       retracking = stepCount < destindex - 1;
       this.stepForward();
     }
+  }
+  
+  this.stepFill = function () {
+    while(!FINISHED)
+      this.stepForward();
+  }
+
+  this.stepBackFill = function () {
+    ISPAUSED = true;
+    if (stepCount <= 0)
+      return;
+    this.reset();
+    this.redrawCanvas();
   }
 
   this.draw = function(evt) {

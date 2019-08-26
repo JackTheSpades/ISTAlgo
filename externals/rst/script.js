@@ -445,6 +445,9 @@ function RandomSearchTree() {
   // of it's sub nodes.
   this.drawNode = function(node) {
     
+    context.font = "bold " + font_size + "px Consolas";
+    context.globalCompositeOperation = "source-over";
+
     if(node == null)
       return;
 
@@ -478,6 +481,19 @@ function RandomSearchTree() {
     var str_width = context.measureText(node.v).width;
     context.fillStyle = grid_color;
     context.fillText(node.v, node.x - str_width / 2, node.y + font_size / 4.0);
+    
+    var px_text = new Array(max_bit_count).fill("_");
+    for (var j = 0; j < PX[node.i].length && j < max_bit_count; j++)
+      px_text[j] = PX[node.i][j];
+    var litteral = px_text.join('');
+
+    //write priority
+    context.font = (font_size / 2.0) + "px Consolas";
+    context.globalCompositeOperation = "source-over";
+
+    var str_width = context.measureText(litteral).width;
+    context.fillStyle = grid_color;
+    context.fillText(litteral, node.x - str_width / 2, node.y + (radius * 1.3) + font_size / 8.0);
 
     this.drawNode(node.l);
     this.drawNode(node.r);
@@ -622,7 +638,7 @@ function RandomSearchTree() {
   // if ISPAUSED is not set it will call stepForward()
   this.runInterval = function () {
     if (randomSearchTree.active) {
-      if (!ISPAUSED) {
+      if (!ISPAUSED && randomSearchTree.animationInterval === null) {
         randomSearchTree.stepForward();
       }
       if (FINISHED)
@@ -691,7 +707,7 @@ function RandomSearchTree() {
     }
 
     if (this.animationContext !== null) {
-      this.animationInterval = setInterval(this.moveNode, 10);
+      this.animationInterval = setInterval(this.moveNode, (exec_interval * speed) / 30.0);
       return;
     }
 
@@ -724,11 +740,11 @@ function RandomSearchTree() {
           text.push(`Inserting: ${X[I]}`);
           text.push(`Compare with: ${compare_node.v}`);
           if (compare_node.v <= node.v) {
-            text.push(`Value greater-equal. Going right.`);
+            text.push(`Value larger-equal. Going right.`);
             next_compare_node = compare_node.r;
             left = false;
           } else {
-            text.push(`Value less. Going left.`);
+            text.push(`Value smaller. Going left.`);
             next_compare_node = compare_node.l;
             left = true;
           }
@@ -739,7 +755,7 @@ function RandomSearchTree() {
           node.sy = node.y;
           node.c = "rgba(0,0,128,0.25)";
 
-          if (next_compare_node !== null && ISPAUSED === true) {
+          if (next_compare_node !== null) {
 
             node.dx = (next_compare_node.x - compare_node.x) / 100;
             node.dy = (next_compare_node.y - compare_node.y) / 100;
@@ -750,7 +766,7 @@ function RandomSearchTree() {
             };
 
           }
-          else if (next_compare_node === null && ISPAUSED === true) {
+          else if (next_compare_node === null) {
 
             var level = 1;  //which level the new node is on.
             var tmp = compare_node.p;
@@ -847,14 +863,12 @@ function RandomSearchTree() {
       if (parent == Tree)
         Tree = last_node;
 
-      if(ISPAUSED === true) {
-        this.calculateTreeNodeDeltaLocations();
-        this.animationContext = {
-          node: Tree,
-          counter: 0,
-          drawTree: false,
-        };
-      }
+      this.calculateTreeNodeDeltaLocations();
+      this.animationContext = {
+        node: Tree,
+        counter: 0,
+        drawTree: false,
+      };
 
       var just_rotated = true;
 
@@ -866,14 +880,14 @@ function RandomSearchTree() {
       if (insert_done) {
         last_node.c = "lime";
         insert_done = false;
-        text.push(`Priority Less. Node stays.`);
+        text.push(`Priority smaller. Node stays.`);
         next_compare_node = Tree;
       } else
         last_node.c = "white";
     }
     else {
       last_node.c = "crimson";
-      text.push(`Priority More. Rotate up.`);
+      text.push(`Priority larger. Rotate up.`);
     }
 
     this.drawCells();
@@ -920,6 +934,11 @@ function RandomSearchTree() {
     this.clear();
     this.drawCells();
     this.drawTree();
+    if(this.animationInterval !== null) {
+      clearInterval(this.animationInterval);
+    }
+    this.animationContext = null;
+
   }
 
 
@@ -928,6 +947,10 @@ function RandomSearchTree() {
     clearInterval(randomSearchTree.interval);
     runspeed = exec_interval * speed;
     randomSearchTree.interval = setInterval(randomSearchTree.runInterval, runspeed);
+    if(this.animationInterval !== null) {
+      clearInterval(randomSearchTree.animationInterval);
+      this.animationInterval = setInterval(randomSearchTree.moveNode, (exec_interval * speed) / 30.0);
+    }
   }
 };
 
