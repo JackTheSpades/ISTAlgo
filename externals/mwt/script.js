@@ -480,11 +480,11 @@ function MinimumWeightTriangulation() {
     var s1 = S[min][max];
     var s2 = S[max][min];
 
-    if(s1 === undefined && s2 == undefined)
+    if(isNaN(s1) && isNaN(s2))
       return -1;
 
     var s = s2;
-    if (s2 === undefined)
+    if (isNaN(s2))
       s = s1;
     return s;
 
