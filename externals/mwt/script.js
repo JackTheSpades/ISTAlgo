@@ -122,6 +122,7 @@ function MinimumWeightTriangulation() {
 
       S[i] = [];
       S[i].length = allPoints.length;
+      S[i][i + 1] = Number.NaN;
     }
 
   }
@@ -610,6 +611,7 @@ function MinimumWeightTriangulation() {
       I = 0;
       K = 1;
       L[I][I + l] = Number.NaN;
+      S[I][I + l] = Number.NaN;
       S_Queue.push(
         {
           in1: 0,
@@ -624,12 +626,12 @@ function MinimumWeightTriangulation() {
     var u = this.circumfrence(I, J, K);
     var cur = L[I][K] + L[K][J] + u;
 
-    if (isNaN(prev)) {
-      L[I][J] = cur;
-      S[I][J] = K;
-    } else if (!isNaN(cur) && cur < prev) {
-      L[I][J] = cur;
-      S[I][J] = K;
+    if(!isNaN(cur))
+    {
+      if (isNaN(prev) || cur < prev) {
+        L[I][J] = cur;
+        S[I][J] = K;
+      }
     }
 
     this.redrawCanvas();
@@ -646,6 +648,7 @@ function MinimumWeightTriangulation() {
       I++;
       J = I + l;
       L[I][J] = Number.NaN;
+      S[I][J] = Number.NaN;
       K = I + 1;
     }
 
@@ -655,6 +658,7 @@ function MinimumWeightTriangulation() {
       K = 1;
       J = I + l;
       L[I][J] = Number.NaN;
+      S[I][J] = Number.NaN;
     }
 
     if (l >= allPoints.length) {
