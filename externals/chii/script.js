@@ -63,6 +63,7 @@ function IterativeHull() {
   var min_object_distance = 20;
 
   var movingPoint = undefined;
+  var rng = undefined;
 
   //global algorithm variables
   var FINISHED = false;
@@ -100,6 +101,11 @@ function IterativeHull() {
 
     $("canvas#canvas").on("mouseover",function() {$(this).css('cursor', 'url(res/crosshair.png), auto');}).mouseout(function(){$(this).css('cursor', 'auto');});
     $("canvas#canvas").on("contextmenu", function(e){ return false; });
+
+    rng = function()
+    {
+      return 0;
+    }
 
     this.redrawCanvas();
   }
@@ -141,7 +147,8 @@ function IterativeHull() {
       randomIndex = -1;
       if(witnessRandomNumbers[witnessRandomIndex] == undefined) {
         //new random number to be generated
-        randomIndex = Math.floor(Math.random() * unwitnessedPoints.length);
+        //Math.random()
+        randomIndex = Math.floor(rng() * unwitnessedPoints.length);
         witnessRandomNumbers.push(randomIndex)
         witnessRandomIndex++;
       } else {
@@ -197,7 +204,8 @@ function IterativeHull() {
         randomIndex = -1;
         if(addPointRandomNumbers[addPointRandomIndex] == undefined) {
           //new random number to be generated
-          randomIndex = Math.floor(Math.random() * remainingPoints.length);
+          //Math.random()
+          randomIndex = Math.floor(rng() * remainingPoints.length);
           addPointRandomNumbers.push(randomIndex)
           addPointRandomIndex++;
         } else {
@@ -852,6 +860,7 @@ function IterativeHull() {
     witnessRandomIndex = 0
     addPointRandomNumbers = []
     addPointRandomIndex = 0
+    rng = Math.random;
 
     this.resetHull();
   }
@@ -958,6 +967,11 @@ function IterativeHull() {
     ISPAUSED = true;
     DRAW = true;
     ADDPOINT = true;
+
+    rng = function()
+    {
+      return 0;
+    };
 
     this.redrawCanvas();  
   }
